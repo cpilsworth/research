@@ -71,3 +71,7 @@ The template renders the offer model fields:
 - This repository currently tracks model outputs for a demo tenant example (`demo`).
 - Additional model templates should follow the same tenant/model folder convention under `src/`.
 - There is an [experimental api](https://developer.adobe.com/experience-cloud/experience-manager-apis/api/experimental/sites/cvt/) to allow html templates to be managed
+
+
+## Ideas / Improvements
+- Create a matching dynamic media template, match the fields, inject the CF field values into the DM template params for an image visualisation of a fragment
