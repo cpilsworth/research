@@ -104,11 +104,14 @@
       /* ── Player ────────────────────────────────────── */
 
       adobe-dm-video-player {
-        width: 100%;
+        /* Scale to fill available width, but never taller than the viewport
+           minus the chrome above the player (~12rem for header + padding). */
+        width: min(100%, calc((100svh - 12rem) * (16 / 9)));
         aspect-ratio: 16 / 9;
         border-radius: var(--r-inner);
         overflow: hidden;
         display: block;
+        margin-inline: auto;
       }
 
       /* ── Code block ────────────────────────────────── */
