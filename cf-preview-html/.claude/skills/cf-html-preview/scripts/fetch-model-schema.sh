@@ -9,7 +9,6 @@ Usage:
     --auth-header "Authorization: Bearer <token>" \
     --tenant-name <name> \
     [--model-id <id> | --model-name <name>] \
-    [--publish-url <url>] \
     [--model-dir-name <name>] \
     [--src-root <dir>] \
     [--models-url <url>] \
@@ -20,22 +19,16 @@ Description:
   Fetches content models and one model schema from an AEM environment, then
   writes normalized field metadata for template generation.
 
-  The publish URL is derived automatically from --base-url by replacing the
-  'author-' host prefix with 'publish-'. Use --publish-url to override this
-  when the default derivation does not match your environment.
-
 Outputs:
   src/<tenantName>/models.json
   src/<tenantName>/<modelName>/model-id.txt
   src/<tenantName>/<modelName>/model-path.txt
-  src/<tenantName>/<modelName>/publish-url.txt
   src/<tenantName>/<modelName>/schema.json
   src/<tenantName>/<modelName>/field-map.json
 
 `--out-dir` can override only the model-level output directory:
   <out-dir>/model-id.txt
   <out-dir>/model-path.txt
-  <out-dir>/publish-url.txt
   <out-dir>/schema.json
   <out-dir>/field-map.json
 
@@ -58,7 +51,6 @@ AUTH_HEADER=""
 MODEL_ID=""
 MODEL_NAME=""
 TENANT_NAME=""
-PUBLISH_URL=""
 MODEL_DIR_NAME=""
 SRC_ROOT="./src"
 MODELS_URL=""
@@ -85,10 +77,6 @@ while [[ $# -gt 0 ]]; do
       ;;
     --tenant-name)
       TENANT_NAME="$2"
-      shift 2
-      ;;
-    --publish-url)
-      PUBLISH_URL="$2"
       shift 2
       ;;
     --tennant-name)
@@ -156,19 +144,6 @@ BASE_URL="${BASE_URL%/}"
 MODELS_URL="${MODELS_URL:-$BASE_URL/adobe/sites/cf/models}"
 SCHEMA_URL_TEMPLATE="${SCHEMA_URL_TEMPLATE:-$BASE_URL/adobe/sites/cf/models/{modelId}}"
 
-# Derive publish URL from author URL (replace author- prefix with publish-)
-if [[ -z "$PUBLISH_URL" ]]; then
-  PUBLISH_URL="$(python3 - "$BASE_URL" <<'PY'
-import re, sys
-url = sys.argv[1]
-# AEM Cloud Service: https://author-pXXXX-eYYYY.adobeaemcloud.com -> https://publish-pXXXX-eYYYY.adobeaemcloud.com
-derived = re.sub(r'(https?://)author-', r'\1publish-', url)
-print(derived)
-PY
-  )"
-fi
-PUBLISH_URL="${PUBLISH_URL%/}"
-
 if [[ -z "$MODEL_DIR_NAME" ]]; then
   MODEL_DIR_NAME="$MODEL_NAME"
 fi
@@ -197,7 +172,6 @@ SCHEMA_JSON="$MODEL_OUT_DIR/schema.json"
 FIELD_MAP_JSON="$MODEL_OUT_DIR/field-map.json"
 MODEL_ID_TXT="$MODEL_OUT_DIR/model-id.txt"
 MODEL_PATH_TXT="$MODEL_OUT_DIR/model-path.txt"
-PUBLISH_URL_TXT="$MODEL_OUT_DIR/publish-url.txt"
 
 echo "Fetching models: $MODELS_URL" >&2
 curl -fsS \
@@ -276,7 +250,6 @@ PY
 
 printf '%s\n' "$MODEL_ID" > "$MODEL_ID_TXT"
 printf '%s\n' "$MODEL_PATH" > "$MODEL_PATH_TXT"
-printf '%s\n' "$PUBLISH_URL" > "$PUBLISH_URL_TXT"
 
 SCHEMA_URL="$(
   python3 - "$SCHEMA_URL_TEMPLATE" "$MODEL_ID" <<'PY'
@@ -402,6 +375,5 @@ echo "Wrote:"
 echo "  $MODELS_JSON"
 echo "  $MODEL_ID_TXT"
 echo "  $MODEL_PATH_TXT"
-echo "  $PUBLISH_URL_TXT"
 echo "  $SCHEMA_JSON"
 echo "  $FIELD_MAP_JSON"

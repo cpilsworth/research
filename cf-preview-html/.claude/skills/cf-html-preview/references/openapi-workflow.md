@@ -12,10 +12,7 @@ Goal:
 - Select one model by stable identifier (prefer id/path over display-only labels).
 
 Record:
-- Environment base URL
-- Publish base URL derived from environment:
-  - Replace host prefix `author-` with `publish-`
-  - Example: `https://author-p31359-e1338271.adobeaemcloud.com` -> `https://publish-p31359-e1338271.adobeaemcloud.com`
+- Environment base URL (for example `https://author-p31359-e1338271.adobeaemcloud.com`)
 - Chosen model id/path/name
 - Any namespace/space information required by your environment
 
@@ -53,7 +50,6 @@ Persist outputs using the standard layout:
 - Tenant-level output: `src/{tenantName}/models.json`
 - Model-level output: `src/{tenantName}/{modelName}/model-id.txt`
 - Model-level output: `src/{tenantName}/{modelName}/model-path.txt`
-- Model-level output: `src/{tenantName}/{modelName}/publish-url.txt` (derived from `--base-url`; override with `--publish-url`)
 - Model-level output: `src/{tenantName}/{modelName}/schema.json`
 - Model-level output: `src/{tenantName}/{modelName}/field-map.json`
 - Model-level output: HTML template file(s), for example `src/{tenantName}/{modelName}/cf-preview-template.html`
@@ -75,20 +71,10 @@ Before finalizing, verify:
 - Multi-valued schema fields are iterated (`#each`) unless intentional index access is used.
 - Optional fields are guarded with `#if`.
 - Asset and helper output uses triple braces.
-- Template `<head>` includes a portable JSON metadata link plus an inline script to rewrite the href to the publish origin at runtime:
+- Template `<head>` includes a relative JSON metadata link (resolves against the current origin, so it works across any AEM instance):
   ```html
   <link rel="alternate" type="application/json" href="/adobe/contentFragments/{{properties.id}}?references=all-hydrated">
-  <script>
-    (function () {
-      var link = document.querySelector('link[rel="alternate"][type="application/json"]');
-      if (link) {
-        var publishHost = location.hostname.replace(/^author-/, 'publish-');
-        link.href = location.protocol + '//' + publishHost + link.getAttribute('href');
-      }
-    }());
-  </script>
   ```
-  This pattern works for any AEM Cloud Service instance without template changes.
 
 ## 6) Debug mismatch quickly
 
