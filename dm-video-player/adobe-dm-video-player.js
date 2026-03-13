@@ -5,8 +5,35 @@ const DEFAULT_VIEWER_ASSET_PATHS = {
 };
 
 const dependencyPromises = new Map();
+const instanceStylesheets = new Map(); // absolute url -> Set<containerId>
 const RESOURCE_LOAD_TIMEOUT_MS = 5000;
 let playerSequence = 0;
+
+function scopeStyles(css, scopeSelector) {
+  const sheet = new CSSStyleSheet();
+  sheet.replaceSync(css);
+  return Array.from(sheet.cssRules).map((rule) => {
+    if (rule instanceof CSSStyleRule) {
+      return rule.cssText.replace(/^([^{]+)\{/, (_, sel) => `${scopeSelector} ${sel.trim()} {`);
+    }
+    if (
+      rule instanceof CSSMediaRule ||
+      rule instanceof CSSSupportsRule ||
+      (typeof CSSLayerBlockRule !== "undefined" && rule instanceof CSSLayerBlockRule) ||
+      (typeof CSSContainerRule !== "undefined" && rule instanceof CSSContainerRule)
+    ) {
+      const inner = Array.from(rule.cssRules)
+        .map((r) =>
+          r instanceof CSSStyleRule
+            ? r.cssText.replace(/^([^{]+)\{/, (_, sel) => `${scopeSelector} ${sel.trim()} {`)
+            : r.cssText
+        )
+        .join("\n");
+      return rule.cssText.replace(/\{[\s\S]*\}/, `{\n${inner}\n}`);
+    }
+    return rule.cssText;
+  }).join("\n");
+}
 
 function ensureDocumentStyle(id, cssText) {
   const existing = document.getElementById(id);
@@ -313,7 +340,20 @@ function loadViewerDependencies(origin) {
 
 class AdobeDmVideoPlayer extends HTMLElement {
   static get observedAttributes() {
-    return ["src", "token", "autoplay", "controls", "letterboxed", "proxy-base-path"];
+    return ["src", "token", "autoplay", "controls", "letterboxed", "proxy-base-path", "styles", "stylesheet"];
+  }
+
+  static get CSS_VAR_MAPPINGS() {
+    return [
+      { prop: "--vjs-control-bar-bg",      selector: ".vjs-control-bar",                                    rule: "background-color" },
+      { prop: "--vjs-progress-color",       selector: ".vjs-play-progress",                                  rule: "background-color" },
+      { prop: "--vjs-load-progress-color",  selector: ".vjs-load-progress",                                  rule: "background-color" },
+      { prop: "--vjs-big-play-bg",          selector: ".vjs-big-play-button",                                rule: "background-color" },
+      { prop: "--vjs-big-play-border",      selector: ".vjs-big-play-button",                                rule: "border-color" },
+      { prop: "--vjs-big-play-color",       selector: ".vjs-big-play-button .vjs-icon-placeholder::before",  rule: "color" },
+      { prop: "--vjs-volume-bar-color",     selector: ".vjs-volume-level",                                   rule: "background-color" },
+      { prop: "--vjs-control-color",        selector: ".vjs-control-bar button",                             rule: "color" },
+    ];
   }
 
   constructor() {
@@ -322,6 +362,7 @@ class AdobeDmVideoPlayer extends HTMLElement {
     this.renderVersion = 0;
     this.resizeObserver = null;
     this.debugInfo = null;
+    this._stylesheetUrl = null;
     this.containerId = `adobe-dm-video-player-${++playerSequence}`;
     this.container = document.createElement("div");
     this.container.id = this.containerId;
@@ -349,6 +390,9 @@ class AdobeDmVideoPlayer extends HTMLElement {
       this.resizeObserver.observe(this);
     }
 
+    this._updateCustomPropsStyle();
+    this._updateCustomStyles();
+    this._updateStylesheet();
     this.renderPlayer();
   }
 
@@ -356,6 +400,9 @@ class AdobeDmVideoPlayer extends HTMLElement {
     this.resizeObserver?.disconnect();
     this.resizeObserver = null;
     this.disposePlayer();
+    document.getElementById(`${this.containerId}-custom-props`)?.remove();
+    document.getElementById(`${this.containerId}-custom-styles`)?.remove();
+    this._cleanupStylesheet();
   }
 
   attributeChangedCallback(name, oldValue, newValue) {
@@ -369,7 +416,99 @@ class AdobeDmVideoPlayer extends HTMLElement {
       return;
     }
 
+    if (name === "styles") {
+      this._updateCustomStyles();
+      return;
+    }
+
+    if (name === "stylesheet") {
+      this._updateStylesheet();
+      return;
+    }
+
     this.renderPlayer();
+  }
+
+  get customStyles() {
+    return this.getAttribute("styles") ?? "";
+  }
+
+  set customStyles(value) {
+    if (value == null || value === "") {
+      this.removeAttribute("styles");
+    } else {
+      this.setAttribute("styles", value);
+    }
+  }
+
+  _updateCustomPropsStyle() {
+    const scope = `#${this.containerId}`;
+    const rules = AdobeDmVideoPlayer.CSS_VAR_MAPPINGS
+      .map(({ prop, selector, rule }) => `${scope} ${selector} { ${rule}: var(${prop}); }`)
+      .join("\n");
+    ensureDocumentStyle(`${this.containerId}-custom-props`, rules);
+  }
+
+  _updateCustomStyles() {
+    const raw = this.getAttribute("styles") || "";
+    const styleId = `${this.containerId}-custom-styles`;
+    if (!raw.trim()) {
+      document.getElementById(styleId)?.remove();
+      return;
+    }
+    let scoped;
+    try {
+      scoped = scopeStyles(raw, `#${this.containerId}`);
+    } catch {
+      console.warn("[adobe-dm-video-player] Could not parse `styles` attribute CSS.", raw);
+      return;
+    }
+    ensureDocumentStyle(styleId, scoped);
+  }
+
+  _updateStylesheet() {
+    const rawAttr = this.getAttribute("stylesheet") || "";
+    const url = rawAttr ? new URL(rawAttr, window.location.href).toString() : "";
+    const prevUrl = this._stylesheetUrl || "";
+
+    if (url === prevUrl) return;
+
+    if (prevUrl) {
+      const refs = instanceStylesheets.get(prevUrl);
+      refs?.delete(this.containerId);
+      if (refs?.size === 0) {
+        instanceStylesheets.delete(prevUrl);
+        document.querySelector(`link[href="${prevUrl}"]`)?.remove();
+      }
+    }
+
+    this._stylesheetUrl = url || null;
+    if (!url) return;
+
+    if (!instanceStylesheets.has(url)) {
+      instanceStylesheets.set(url, new Set());
+    }
+    instanceStylesheets.get(url).add(this.containerId);
+
+    ensureStylesheet(url).catch((err) => {
+      console.warn("[adobe-dm-video-player] Failed to load stylesheet:", url, err);
+      this.dispatchEvent(new CustomEvent("adobe-dm-player-stylesheet-error", {
+        detail: { url, error: err },
+        bubbles: true,
+      }));
+    });
+  }
+
+  _cleanupStylesheet() {
+    const url = this._stylesheetUrl;
+    if (!url) return;
+    const refs = instanceStylesheets.get(url);
+    refs?.delete(this.containerId);
+    if (refs?.size === 0) {
+      instanceStylesheets.delete(url);
+      document.querySelector(`link[href="${url}"]`)?.remove();
+    }
+    this._stylesheetUrl = null;
   }
 
   getToken(src) {

@@ -198,6 +198,60 @@
           gap: 0.35rem;
         }
       }
+
+      /* ── Styled examples ────────────────────────────── */
+
+      .examples-intro {
+        font-size: clamp(0.8rem, 1.8vw, 0.875rem);
+        line-height: 1.6;
+        color: var(--text-muted);
+      }
+
+      .examples-intro code {
+        font-family: "IBM Plex Mono", "Fira Code", ui-monospace, monospace;
+        font-size: 0.85em;
+        background: var(--code-bg);
+        border: 1px solid var(--code-border);
+        padding: 0.1em 0.35em;
+        border-radius: 4px;
+      }
+
+      .example {
+        display: grid;
+        gap: 0.75rem;
+      }
+
+      .example + .example {
+        padding-top: 1.5rem;
+        border-top: 1px solid var(--divider);
+      }
+
+      .example-title {
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: var(--text);
+      }
+
+      .example-body {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+        align-items: start;
+      }
+
+      .example-player {
+        width: 100% !important;
+        aspect-ratio: 16 / 9;
+        border-radius: var(--r-inner);
+        overflow: hidden;
+        display: block;
+      }
+
+      @media (max-width: 640px) {
+        .example-body {
+          grid-template-columns: 1fr;
+        }
+      }
     </style>
   </head>
   <body>
@@ -254,7 +308,167 @@
             <span class="attr-name">proxy-base-path</span>
             <span class="attr-desc">Same-origin proxy base path to route manifests and media segments through your server.</span>
           </div>
+          <div class="attr-row">
+            <span class="attr-name">styles</span>
+            <span class="attr-desc">Raw CSS string automatically scoped to this player instance. Rules are prefixed with the container ID so they never affect other players. Also settable via the <code>customStyles</code> JS property.</span>
+          </div>
+          <div class="attr-row">
+            <span class="attr-name">stylesheet</span>
+            <span class="attr-desc">URL of an external CSS file to load. The stylesheet is global (affects all instances) but is reference-counted and removed from the document when the last instance that requested it disconnects.</span>
+          </div>
         </div>
+      </section>
+
+      <section class="card">
+        <p class="card-label">Styling</p>
+        <div class="attr-list">
+          <div class="attr-row">
+            <span class="attr-name">--vjs-control-bar-bg</span>
+            <span class="attr-desc">Control bar background color.</span>
+          </div>
+          <div class="attr-row">
+            <span class="attr-name">--vjs-progress-color</span>
+            <span class="attr-desc">Played-progress fill color.</span>
+          </div>
+          <div class="attr-row">
+            <span class="attr-name">--vjs-load-progress-color</span>
+            <span class="attr-desc">Buffered-progress fill color.</span>
+          </div>
+          <div class="attr-row">
+            <span class="attr-name">--vjs-big-play-bg</span>
+            <span class="attr-desc">Big play button background color.</span>
+          </div>
+          <div class="attr-row">
+            <span class="attr-name">--vjs-big-play-border</span>
+            <span class="attr-desc">Big play button border color.</span>
+          </div>
+          <div class="attr-row">
+            <span class="attr-name">--vjs-big-play-color</span>
+            <span class="attr-desc">Big play button icon color.</span>
+          </div>
+          <div class="attr-row">
+            <span class="attr-name">--vjs-volume-bar-color</span>
+            <span class="attr-desc">Volume level fill color.</span>
+          </div>
+          <div class="attr-row">
+            <span class="attr-name">--vjs-control-color</span>
+            <span class="attr-desc">Control bar button icon color.</span>
+          </div>
+        </div>
+
+        <div class="code-block"><code>&lt;!-- CSS custom properties (set inline or via external CSS) --&gt;
+&lt;adobe-dm-video-player
+  src="…"
+  style="--vjs-progress-color: #f4562d; --vjs-big-play-bg: #f4562d;"
+&gt;&lt;/adobe-dm-video-player&gt;
+
+&lt;!-- Inline scoped CSS (auto-prefixed to this instance's container) --&gt;
+&lt;adobe-dm-video-player
+  src="…"
+  styles=".vjs-big-play-button { border-radius: 50%; }"
+&gt;&lt;/adobe-dm-video-player&gt;
+
+&lt;!-- External stylesheet (loaded once, ref-counted across instances) --&gt;
+&lt;adobe-dm-video-player
+  src="…"
+  stylesheet="/styles/player-theme.css"
+&gt;&lt;/adobe-dm-video-player&gt;</code></div>
+      </section>
+
+      <section class="card">
+        <p class="card-label">Styled Examples</p>
+        <p class="examples-intro">Theme the player with CSS custom properties on the <code>style</code> attribute, or use the <code>styles</code> attribute for scoped CSS rules that are automatically prefixed to the instance.</p>
+
+        <div class="example">
+          <p class="example-title">Branded — orange controls</p>
+          <div class="example-body">
+            <adobe-dm-video-player
+              class="example-player"
+              src="https://delivery-p31359-e1338271.adobeaemcloud.com/adobe/assets/urn:aaid:aem:7091fd88-9d0f-4aa6-8bfb-2746ce1d815f/play"
+              controls
+              style="min-height:0; --vjs-control-bar-bg:#f4562d; --vjs-progress-color:#fff; --vjs-load-progress-color:rgba(255,255,255,0.3); --vjs-big-play-bg:#f4562d; --vjs-big-play-border:transparent; --vjs-big-play-color:#fff; --vjs-control-color:#fff; --vjs-volume-bar-color:rgba(255,255,255,0.7);"
+            ></adobe-dm-video-player>
+            <div class="code-block"><code>&lt;adobe-dm-video-player
+  src="…/play"
+  style="
+    --vjs-control-bar-bg: #f4562d;
+    --vjs-progress-color: #fff;
+    --vjs-load-progress-color:
+      rgba(255,255,255,0.3);
+    --vjs-big-play-bg: #f4562d;
+    --vjs-big-play-border: transparent;
+    --vjs-big-play-color: #fff;
+    --vjs-control-color: #fff;
+    --vjs-volume-bar-color:
+      rgba(255,255,255,0.7);
+  "
+&gt;&lt;/adobe-dm-video-player&gt;</code></div>
+          </div>
+        </div>
+
+        <div class="example">
+          <p class="example-title">Cinema — dark with purple accent</p>
+          <div class="example-body">
+            <adobe-dm-video-player
+              class="example-player"
+              src="https://delivery-p31359-e1338271.adobeaemcloud.com/adobe/assets/urn:aaid:aem:7091fd88-9d0f-4aa6-8bfb-2746ce1d815f/play"
+              controls
+              style="min-height:0; --vjs-control-bar-bg:#0d0d1a; --vjs-progress-color:#a78bfa; --vjs-load-progress-color:rgba(167,139,250,0.25); --vjs-big-play-bg:rgba(13,13,26,0.8); --vjs-big-play-border:#a78bfa; --vjs-big-play-color:#a78bfa; --vjs-control-color:#a78bfa; --vjs-volume-bar-color:#a78bfa;"
+            ></adobe-dm-video-player>
+            <div class="code-block"><code>&lt;adobe-dm-video-player
+  src="…/play"
+  style="
+    --vjs-control-bar-bg: #0d0d1a;
+    --vjs-progress-color: #a78bfa;
+    --vjs-load-progress-color:
+      rgba(167,139,250,0.25);
+    --vjs-big-play-bg: rgba(13,13,26,0.8);
+    --vjs-big-play-border: #a78bfa;
+    --vjs-big-play-color: #a78bfa;
+    --vjs-control-color: #a78bfa;
+    --vjs-volume-bar-color: #a78bfa;
+  "
+&gt;&lt;/adobe-dm-video-player&gt;</code></div>
+          </div>
+        </div>
+
+        <div class="example">
+          <p class="example-title">Minimal — translucent bar, circular play button</p>
+          <div class="example-body">
+            <adobe-dm-video-player
+              class="example-player"
+              src="https://delivery-p31359-e1338271.adobeaemcloud.com/adobe/assets/urn:aaid:aem:7091fd88-9d0f-4aa6-8bfb-2746ce1d815f/play"
+              controls
+              style="min-height:0; --vjs-control-bar-bg:rgba(0,0,0,0.45); --vjs-progress-color:#fff; --vjs-load-progress-color:rgba(255,255,255,0.2); --vjs-big-play-bg:rgba(255,255,255,0.12); --vjs-big-play-border:rgba(255,255,255,0.7); --vjs-big-play-color:#fff; --vjs-control-color:rgba(255,255,255,0.85); --vjs-volume-bar-color:#fff;"
+              styles=".vjs-big-play-button { border-radius: 50%; width: 2.5em; height: 2.5em; line-height: 2.5em; margin-top: -1.25em; margin-left: -1.25em; }"
+            ></adobe-dm-video-player>
+            <div class="code-block"><code>&lt;adobe-dm-video-player
+  src="…/play"
+  style="
+    --vjs-control-bar-bg: rgba(0,0,0,0.45);
+    --vjs-progress-color: #fff;
+    --vjs-load-progress-color:
+      rgba(255,255,255,0.2);
+    --vjs-big-play-bg: rgba(255,255,255,0.12);
+    --vjs-big-play-border:
+      rgba(255,255,255,0.7);
+    --vjs-big-play-color: #fff;
+    --vjs-control-color: rgba(255,255,255,0.85);
+    --vjs-volume-bar-color: #fff;
+  "
+  styles="
+    .vjs-big-play-button {
+      border-radius: 50%;
+      width: 2.5em; height: 2.5em;
+      line-height: 2.5em;
+      margin-top: -1.25em;
+      margin-left: -1.25em;
+    }
+  "
+&gt;&lt;/adobe-dm-video-player&gt;</code></div>
+          </div>
+        </div>
+
       </section>
 
     </main>

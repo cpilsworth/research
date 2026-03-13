@@ -27,6 +27,57 @@ This folder contains a small Web Component wrapper around Adobe's Dynamic Media 
 - `controls`: Optional boolean attribute. Defaults to `true`.
 - `letterboxed`: Optional boolean attribute. Defaults to `false`.
 - `proxy-base-path`: Optional same-origin proxy base path for manifests and media. Use this only when your server actually proxies that route.
+- `styles`: Optional raw CSS string scoped automatically to this player instance. Rules are prefixed with the container ID so they never affect other players on the page. Also settable via the `customStyles` JS property.
+- `stylesheet`: Optional URL of an external CSS file to load. The stylesheet is document-global but ref-counted across instances and removed when the last referencing instance disconnects.
+
+## Styling
+
+The component exposes three composable mechanisms for per-instance player styling.
+
+### 1. CSS custom properties
+
+Set variables on the element via inline `style` or external CSS. The component generates a scoped style block that maps each variable to the correct VideoJS selector using `var()` references, so the browser resolves them live.
+
+| Variable | Effect |
+|---|---|
+| `--vjs-control-bar-bg` | Control bar background |
+| `--vjs-progress-color` | Played-progress fill |
+| `--vjs-load-progress-color` | Buffered-progress fill |
+| `--vjs-big-play-bg` | Big play button background |
+| `--vjs-big-play-border` | Big play button border |
+| `--vjs-big-play-color` | Big play button icon |
+| `--vjs-volume-bar-color` | Volume level fill |
+| `--vjs-control-color` | Control bar button icons |
+
+```html
+<adobe-dm-video-player
+  src="…"
+  style="--vjs-progress-color: #f4562d; --vjs-big-play-bg: #f4562d;"
+></adobe-dm-video-player>
+```
+
+### 2. `styles` attribute / `customStyles` property
+
+Raw CSS scoped to this instance. The component parses the string via `CSSStyleSheet` and prefixes every selector with the container's unique ID.
+
+```html
+<adobe-dm-video-player
+  src="…"
+  styles=".vjs-big-play-button { border-radius: 50%; }"
+></adobe-dm-video-player>
+```
+
+```js
+player.customStyles = '.vjs-big-play-button { border-radius: 50%; }';
+```
+
+### 3. `stylesheet` attribute
+
+Load an external CSS file. The `<link>` tag is added to `document.head` once and removed when the last instance that requested it disconnects.
+
+```html
+<adobe-dm-video-player src="…" stylesheet="/styles/player-theme.css"></adobe-dm-video-player>
+```
 
 ## Notes
 
