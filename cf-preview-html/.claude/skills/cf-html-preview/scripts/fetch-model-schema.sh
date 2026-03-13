@@ -7,8 +7,9 @@ Usage:
   fetch-model-schema.sh \
     --base-url <aem-base-url> \
     --auth-header "Authorization: Bearer <token>" \
-    --tennant-name <name> \
+    --tenant-name <name> \
     [--model-id <id> | --model-name <name>] \
+    [--publish-url <url>] \
     [--model-dir-name <name>] \
     [--src-root <dir>] \
     [--models-url <url>] \
@@ -19,16 +20,22 @@ Description:
   Fetches content models and one model schema from an AEM environment, then
   writes normalized field metadata for template generation.
 
+  The publish URL is derived automatically from --base-url by replacing the
+  'author-' host prefix with 'publish-'. Use --publish-url to override this
+  when the default derivation does not match your environment.
+
 Outputs:
-  src/<tennantName>/models.json
-  src/<tennantName>/<modelName>/model-id.txt
-  src/<tennantName>/<modelName>/model-path.txt
-  src/<tennantName>/<modelName>/schema.json
-  src/<tennantName>/<modelName>/field-map.json
+  src/<tenantName>/models.json
+  src/<tenantName>/<modelName>/model-id.txt
+  src/<tenantName>/<modelName>/model-path.txt
+  src/<tenantName>/<modelName>/publish-url.txt
+  src/<tenantName>/<modelName>/schema.json
+  src/<tenantName>/<modelName>/field-map.json
 
 `--out-dir` can override only the model-level output directory:
   <out-dir>/model-id.txt
   <out-dir>/model-path.txt
+  <out-dir>/publish-url.txt
   <out-dir>/schema.json
   <out-dir>/field-map.json
 
@@ -50,7 +57,8 @@ BASE_URL=""
 AUTH_HEADER=""
 MODEL_ID=""
 MODEL_NAME=""
-TENNANT_NAME=""
+TENANT_NAME=""
+PUBLISH_URL=""
 MODEL_DIR_NAME=""
 SRC_ROOT="./src"
 MODELS_URL=""
@@ -75,8 +83,17 @@ while [[ $# -gt 0 ]]; do
       MODEL_NAME="$2"
       shift 2
       ;;
+    --tenant-name)
+      TENANT_NAME="$2"
+      shift 2
+      ;;
+    --publish-url)
+      PUBLISH_URL="$2"
+      shift 2
+      ;;
     --tennant-name)
-      TENNANT_NAME="$2"
+      echo "Warning: --tennant-name is deprecated; use --tenant-name" >&2
+      TENANT_NAME="$2"
       shift 2
       ;;
     --model-dir-name)
@@ -121,8 +138,8 @@ if [[ -z "$AUTH_HEADER" ]]; then
   usage >&2
   exit 1
 fi
-if [[ -z "$TENNANT_NAME" ]]; then
-  echo "Error: --tennant-name is required" >&2
+if [[ -z "$TENANT_NAME" ]]; then
+  echo "Error: --tenant-name is required" >&2
   usage >&2
   exit 1
 fi
@@ -138,6 +155,19 @@ require_cmd python3
 BASE_URL="${BASE_URL%/}"
 MODELS_URL="${MODELS_URL:-$BASE_URL/adobe/sites/cf/models}"
 SCHEMA_URL_TEMPLATE="${SCHEMA_URL_TEMPLATE:-$BASE_URL/adobe/sites/cf/models/{modelId}}"
+
+# Derive publish URL from author URL (replace author- prefix with publish-)
+if [[ -z "$PUBLISH_URL" ]]; then
+  PUBLISH_URL="$(python3 - "$BASE_URL" <<'PY'
+import re, sys
+url = sys.argv[1]
+# AEM Cloud Service: https://author-pXXXX-eYYYY.adobeaemcloud.com -> https://publish-pXXXX-eYYYY.adobeaemcloud.com
+derived = re.sub(r'(https?://)author-', r'\1publish-', url)
+print(derived)
+PY
+  )"
+fi
+PUBLISH_URL="${PUBLISH_URL%/}"
 
 if [[ -z "$MODEL_DIR_NAME" ]]; then
   MODEL_DIR_NAME="$MODEL_NAME"
@@ -158,15 +188,16 @@ print(value or "model")
 PY
 )"
 
-TENNANT_DIR="$SRC_ROOT/$TENNANT_NAME"
-MODEL_OUT_DIR="${OUT_DIR:-$TENNANT_DIR/$MODEL_DIR_NAME}"
+TENANT_DIR="$SRC_ROOT/$TENANT_NAME"
+MODEL_OUT_DIR="${OUT_DIR:-$TENANT_DIR/$MODEL_DIR_NAME}"
 
-mkdir -p "$TENNANT_DIR" "$MODEL_OUT_DIR"
-MODELS_JSON="$TENNANT_DIR/models.json"
+mkdir -p "$TENANT_DIR" "$MODEL_OUT_DIR"
+MODELS_JSON="$TENANT_DIR/models.json"
 SCHEMA_JSON="$MODEL_OUT_DIR/schema.json"
 FIELD_MAP_JSON="$MODEL_OUT_DIR/field-map.json"
 MODEL_ID_TXT="$MODEL_OUT_DIR/model-id.txt"
 MODEL_PATH_TXT="$MODEL_OUT_DIR/model-path.txt"
+PUBLISH_URL_TXT="$MODEL_OUT_DIR/publish-url.txt"
 
 echo "Fetching models: $MODELS_URL" >&2
 curl -fsS \
@@ -175,7 +206,7 @@ curl -fsS \
   "$MODELS_URL" > "$MODELS_JSON"
 
 if [[ -z "$MODEL_ID" ]]; then
-  MODEL_ID="$({
+  MODEL_ID="$(
     python3 - "$MODELS_JSON" "$MODEL_NAME" <<'PY'
 import json
 import sys
@@ -209,7 +240,7 @@ for c in items:
 
 sys.exit(1)
 PY
-  } )" || true
+  )" || true
 fi
 
 if [[ -z "$MODEL_ID" ]]; then
@@ -245,6 +276,7 @@ PY
 
 printf '%s\n' "$MODEL_ID" > "$MODEL_ID_TXT"
 printf '%s\n' "$MODEL_PATH" > "$MODEL_PATH_TXT"
+printf '%s\n' "$PUBLISH_URL" > "$PUBLISH_URL_TXT"
 
 SCHEMA_URL="$(
   python3 - "$SCHEMA_URL_TEMPLATE" "$MODEL_ID" <<'PY'
@@ -370,5 +402,6 @@ echo "Wrote:"
 echo "  $MODELS_JSON"
 echo "  $MODEL_ID_TXT"
 echo "  $MODEL_PATH_TXT"
+echo "  $PUBLISH_URL_TXT"
 echo "  $SCHEMA_JSON"
 echo "  $FIELD_MAP_JSON"

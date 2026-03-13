@@ -26,16 +26,18 @@ Use model metadata from the target AEM environment before generating template ma
   - `https://developer.adobe.com/experience-cloud/experience-manager-apis/api/stable/contentfragments/delivery/#operation/models/getModelSchema`
 - Build a working field map from schema properties (field name, type, multi-value flag, reference/asset behavior).
 - Prefer the bundled helper to fetch and normalize model metadata:
-  - `scripts/fetch-model-schema.sh --base-url <env-url> --auth-header "Authorization: Bearer <token>" --tennant-name <tennantName> --model-id <id>`
+  - `scripts/fetch-model-schema.sh --base-url <env-url> --auth-header "Authorization: Bearer <token>" --tenant-name <tenantName> --model-id <id>`
   - Use `--model-name` when id is unknown.
+  - Use `--publish-url <url>` to override the derived publish URL (auto-derived by replacing `author-` with `publish-` in `--base-url`).
   - Use `--model-dir-name` to override the model folder name.
   - Use `--models-url` / `--schema-url-template` when environment-specific endpoints differ.
   - Default output layout:
-    - Tenant-level: `src/{tennantName}/models.json`
-    - Model-level: `src/{tennantName}/{modelName}/model-id.txt`
-    - Model-level: `src/{tennantName}/{modelName}/model-path.txt`
-    - Model-level: `src/{tennantName}/{modelName}/schema.json`
-    - Model-level: `src/{tennantName}/{modelName}/field-map.json`
+    - Tenant-level: `src/{tenantName}/models.json`
+    - Model-level: `src/{tenantName}/{modelName}/model-id.txt`
+    - Model-level: `src/{tenantName}/{modelName}/model-path.txt`
+    - Model-level: `src/{tenantName}/{modelName}/publish-url.txt`
+    - Model-level: `src/{tenantName}/{modelName}/schema.json`
+    - Model-level: `src/{tenantName}/{modelName}/field-map.json`
     - Model-level HTML template output should be written in the same model folder.
 
 3. Identify template intent and data shape.
@@ -67,8 +69,10 @@ Use model metadata from the target AEM environment before generating template ma
 - Surface reference-load failures when useful (`referencesError`, `referencesErrorMessage`).
 - If debugging unknown data, render a temporary table with `allFields`.
 - Include a JSON metadata link to the fragment representation when fragment id is available:
-  - Use absolute publish URL form (not relative): `https://publish-<env>/adobe/contentFragments/{CF_ID}?references=all-hydrated`
-  - Place it in `<head>` as rel metadata, not in body content.
+  - Place it in `<head>` as `<link rel="alternate" type="application/json">` with a relative path.
+  - Add an inline `<script>` immediately after to rewrite the href to the correct publish origin at runtime.
+  - This makes the template portable across any AEM Cloud Service instance without code changes.
+  - Read `publish-url.txt` (written by the fetch script) to verify the expected publish URL.
 
 ## Output Rules
 
@@ -94,7 +98,20 @@ Use model metadata from the target AEM environment before generating template ma
 
 {{{asset fields.heroImage class="hero-image" loading="lazy"}}}
 {{{text fields.category class="category-badge"}}}
-<link rel="alternate" type="application/json" href="https://publish-<env>/adobe/contentFragments/{{properties.id}}?references=all-hydrated">
+
+{{! Portable JSON metadata link — publish URL derived at runtime from window.location }}
+{{#if properties.id}}
+  <link rel="alternate" type="application/json" href="/adobe/contentFragments/{{properties.id}}?references=all-hydrated">
+  <script>
+    (function () {
+      var link = document.querySelector('link[rel="alternate"][type="application/json"]');
+      if (link) {
+        var publishHost = location.hostname.replace(/^author-/, 'publish-');
+        link.href = location.protocol + '//' + publishHost + link.getAttribute('href');
+      }
+    }());
+  </script>
+{{/if}}
 ```
 
 ## Validation Checklist
@@ -106,11 +123,11 @@ Use model metadata from the target AEM environment before generating template ma
 - Multi-valued fields are iterated, not stringified.
 - Nested references resolve at expected hydration depth.
 - Asset fields render as HTML (not escaped text).
-- `<head>` contains an absolute publish-domain JSON metadata link with `?references=all-hydrated`.
+- `<head>` contains a JSON metadata link with `?references=all-hydrated` and an inline script to rewrite the href to the publish origin at runtime.
 - No unclosed Handlebars blocks.
 
 ## Reference
 
 Use `references/cf-html-preview-guide.md` for full context object details, advanced examples, troubleshooting, and helper behavior.
 Use `references/openapi-workflow.md` for a concrete `getModels` + `getModelSchema` workflow and schema-to-template mapping rules.
-Use `scripts/fetch-model-schema.sh` to fetch tenant-level `models.json` and model-level metadata (`model-id.txt`, `model-path.txt`, `schema.json`, `field-map.json`) in `src/{tennantName}/{modelName}`.
+Use `scripts/fetch-model-schema.sh` to fetch tenant-level `models.json` and model-level metadata (`model-id.txt`, `model-path.txt`, `publish-url.txt`, `schema.json`, `field-map.json`) in `src/{tenantName}/{modelName}`.
