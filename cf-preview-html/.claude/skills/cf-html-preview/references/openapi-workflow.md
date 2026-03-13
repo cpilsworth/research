@@ -53,6 +53,7 @@ Persist outputs using the standard layout:
 - Tenant-level output: `src/{tenantName}/models.json`
 - Model-level output: `src/{tenantName}/{modelName}/model-id.txt`
 - Model-level output: `src/{tenantName}/{modelName}/model-path.txt`
+- Model-level output: `src/{tenantName}/{modelName}/publish-url.txt` (derived from `--base-url`; override with `--publish-url`)
 - Model-level output: `src/{tenantName}/{modelName}/schema.json`
 - Model-level output: `src/{tenantName}/{modelName}/field-map.json`
 - Model-level output: HTML template file(s), for example `src/{tenantName}/{modelName}/cf-preview-template.html`
@@ -74,8 +75,20 @@ Before finalizing, verify:
 - Multi-valued schema fields are iterated (`#each`) unless intentional index access is used.
 - Optional fields are guarded with `#if`.
 - Asset and helper output uses triple braces.
-- Template `<head>` includes JSON metadata link using full publish domain:
-  - `<link rel="alternate" type="application/json" href="https://publish-<env>/adobe/contentFragments/{CF_ID}?references=all-hydrated">`
+- Template `<head>` includes a portable JSON metadata link plus an inline script to rewrite the href to the publish origin at runtime:
+  ```html
+  <link rel="alternate" type="application/json" href="/adobe/contentFragments/{{properties.id}}?references=all-hydrated">
+  <script>
+    (function () {
+      var link = document.querySelector('link[rel="alternate"][type="application/json"]');
+      if (link) {
+        var publishHost = location.hostname.replace(/^author-/, 'publish-');
+        link.href = location.protocol + '//' + publishHost + link.getAttribute('href');
+      }
+    }());
+  </script>
+  ```
+  This pattern works for any AEM Cloud Service instance without template changes.
 
 ## 6) Debug mismatch quickly
 

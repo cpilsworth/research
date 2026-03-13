@@ -5,7 +5,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{{#if fields.title}}{{{fields.title}}}{{else}}Offer Preview{{/if}}</title>
   {{#if properties.id}}
-    <link rel="alternate" type="application/json" href="https://publish-p31359-e1338271.adobeaemcloud.com/adobe/contentFragments/{{properties.id}}?references=all-hydrated">
+    <link rel="alternate" type="application/json" href="/adobe/contentFragments/{{properties.id}}?references=all-hydrated">
+    <script>
+      (function () {
+        var link = document.querySelector('link[rel="alternate"][type="application/json"]');
+        if (link) {
+          var publishHost = location.hostname.replace(/^author-/, 'publish-');
+          link.href = location.protocol + '//' + publishHost + link.getAttribute('href');
+        }
+      }());
+    </script>
   {{/if}}
   <style>
     :root {
