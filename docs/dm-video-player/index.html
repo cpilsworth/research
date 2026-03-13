@@ -104,24 +104,17 @@
         background: var(--panel-strong);
       }
 
+      .player-wrap {
+        max-width: 720px;
+        margin: 1rem auto 0;
+      }
+
       adobe-dm-video-player {
         display: block;
         width: 100%;
         aspect-ratio: 16 / 9;
         border-radius: 20px;
         overflow: hidden;
-        margin-top: 1rem;
-      }
-
-      .grid {
-        display: grid;
-        gap: 1.25rem;
-      }
-
-      @media (min-width: 900px) {
-        .grid {
-          grid-template-columns: 1.1fr 0.9fr;
-        }
       }
 
       .info h2 {
@@ -181,23 +174,23 @@
       <section class="demo">
         <h2>Live Demo</h2>
         <p>The player below is initialized by the Web Component rather than loaded inside an iframe.</p>
-        <adobe-dm-video-player
-          src="https://delivery-p31359-e1338271.adobeaemcloud.com/adobe/assets/urn:aaid:aem:7091fd88-9d0f-4aa6-8bfb-2746ce1d815f/play"
-          controls
-        ></adobe-dm-video-player>
+        <div class="player-wrap">
+          <adobe-dm-video-player
+            src="https://delivery-p31359-e1338271.adobeaemcloud.com/adobe/assets/urn:aaid:aem:7091fd88-9d0f-4aa6-8bfb-2746ce1d815f/play"
+            controls
+          ></adobe-dm-video-player>
+        </div>
       </section>
 
-      <div class="grid">
-        <section class="info">
-          <h2>What This Folder Contains</h2>
-          <ul>
-            <li><code>adobe-dm-video-player.js</code>: the custom element implementation.</li>
-            <li><code>index.html</code>: the demo page for this published site.</li>
-            <li><code>serve-local.js</code>: the tiny static server used for local testing in the repo.</li>
-          </ul>
+      <section class="info">
+        <h2>What This Folder Contains</h2>
+        <ul>
+          <li><code>adobe-dm-video-player.js</code>: the custom element implementation.</li>
+          <li><code>index.html</code>: the demo page for this published site.</li>
+        </ul>
 
-          <h2>Usage</h2>
-          <pre><code>&lt;script type="module" src="/path/to/adobe-dm-video-player.js"&gt;&lt;/script&gt;
+        <h2>Usage</h2>
+        <pre><code>&lt;script type="module" src="/path/to/adobe-dm-video-player.js"&gt;&lt;/script&gt;
 
 &lt;adobe-dm-video-player
   src="https://delivery-p31359-e1338271.adobeaemcloud.com/adobe/assets/urn:aaid:aem:7091fd88-9d0f-4aa6-8bfb-2746ce1d815f/play"
@@ -205,58 +198,56 @@
 &gt;
 &lt;/adobe-dm-video-player&gt;</code></pre>
 
-          <h2>Supported Attributes</h2>
-          <ul>
-            <li><code>src</code>: required Dynamic Media <code>/play</code> URL.</li>
-            <li><code>token</code>: optional secure-delivery token.</li>
-            <li><code>autoplay</code>: optional boolean attribute.</li>
-            <li><code>controls</code>: optional boolean attribute, defaults to <code>true</code>.</li>
-            <li><code>letterboxed</code>: optional boolean attribute, defaults to <code>false</code>.</li>
-            <li><code>proxy-base-path</code>: optional same-origin proxy base path when a host server rewrites manifests and media.</li>
-          </ul>
-        </section>
+        <h2>Supported Attributes</h2>
+        <ul>
+          <li><code>src</code>: required Dynamic Media <code>/play</code> URL.</li>
+          <li><code>token</code>: optional secure-delivery token.</li>
+          <li><code>autoplay</code>: optional boolean attribute.</li>
+          <li><code>controls</code>: optional boolean attribute, defaults to <code>true</code>.</li>
+          <li><code>letterboxed</code>: optional boolean attribute, defaults to <code>false</code>.</li>
+          <li><code>proxy-base-path</code>: optional same-origin proxy base path when a host server rewrites manifests and media.</li>
+        </ul>
+      </section>
 
-        <section class="info">
-          <h2>How It Works</h2>
-          <p>
-            The component loads Adobe's hosted viewer CSS and JavaScript once per page, derives the HLS manifest, DASH manifest,
-            and poster image from the supplied <code>/play</code> URL, and mounts the Adobe player into a normal DOM container.
-          </p>
-          <p>
-            It uses light DOM rather than shadow DOM because Adobe's viewer runtime looks up its mount node with
-            <code>document.getElementById(...)</code>.
-          </p>
+      <section class="info">
+        <h2>How It Works</h2>
+        <p>
+          The component loads Adobe's hosted viewer CSS and JavaScript once per page, derives the HLS manifest, DASH manifest,
+          and poster image from the supplied <code>/play</code> URL, and mounts the Adobe player into a normal DOM container.
+        </p>
+        <p>
+          It uses light DOM rather than shadow DOM because Adobe's viewer runtime looks up its mount node with
+          <code>document.getElementById(...)</code>.
+        </p>
 
-          <h2>Special Video Processing</h2>
-          <p>
-            Dynamic Media manifests can contain relative media references. When a host page uses a different origin, those
-            references may need to be rewritten through a same-origin proxy path so the player can still resolve child playlists,
-            MP4 fragments, and DASH assets correctly.
-          </p>
-          <p>
-            DASH rewrites also need valid XML escaping when query parameters are inserted into MPD attributes. Without that,
-            the browser can reject the source as unsupported even when the media itself is valid.
-          </p>
+        <h2>Special Video Processing</h2>
+        <p>
+          Dynamic Media manifests can contain relative media references. When a host page uses a different origin, those
+          references may need to be rewritten through a same-origin proxy path so the player can still resolve child playlists,
+          MP4 fragments, and DASH assets correctly.
+        </p>
+        <p>
+          DASH rewrites also need valid XML escaping when query parameters are inserted into MPD attributes. Without that,
+          the browser can reject the source as unsupported even when the media itself is valid.
+        </p>
 
-          <h2>Benefits And Tradeoffs</h2>
-          <p>
-            Compared with an iframe, the Web Component integrates much more cleanly with the host page: layout is simpler,
-            responsiveness is better, and host code can interact with the player more naturally.
-          </p>
-          <p>
-            The tradeoff is that the embedding page now owns more complexity. Script loading, player lifecycle, cross-origin
-            media handling, and any manifest proxying are the responsibility of the host implementation instead of Adobe's
-            standalone player page.
-          </p>
-        </section>
-      </div>
+        <h2>Benefits And Tradeoffs</h2>
+        <p>
+          Compared with an iframe, the Web Component integrates much more cleanly with the host page: layout is simpler,
+          responsiveness is better, and host code can interact with the player more naturally.
+        </p>
+        <p>
+          The tradeoff is that the embedding page now owns more complexity. Script loading, player lifecycle, cross-origin
+          media handling, and any manifest proxying are the responsibility of the host implementation instead of Adobe's
+          standalone player page.
+        </p>
+      </section>
 
       <section class="info">
         <h2>Notes</h2>
         <ul>
           <li>The component loads Adobe hosted viewer assets once per page.</li>
           <li>The published page includes the same README-level guidance directly in the HTML for quick reference.</li>
-          <li class="footnote">For local repo testing, run <code>node serve-local.js</code> from the <code>dm-video-player</code> folder and open <code>http://127.0.0.1:4173</code>.</li>
         </ul>
       </section>
 

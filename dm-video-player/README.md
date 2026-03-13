@@ -6,7 +6,6 @@ This folder contains a small Web Component wrapper around Adobe's Dynamic Media 
 
 - `adobe-dm-video-player.js`: Custom element implementation.
 - `index.html`: Minimal demo page wired to the sample Dynamic Media asset.
-- `serve-local.js`: Tiny static file server for local testing.
 - `../docs/index.html`: GitHub Pages-friendly published demo page that also includes the README guidance inline.
 
 ## Usage
@@ -19,16 +18,6 @@ This folder contains a small Web Component wrapper around Adobe's Dynamic Media 
   controls
 ></adobe-dm-video-player>
 ```
-
-## Serve locally
-
-From this folder:
-
-```bash
-node serve-local.js
-```
-
-Then open `http://127.0.0.1:4173`.
 
 ## Supported attributes
 
