@@ -431,9 +431,9 @@ Iterating Over Referenced Fragments
     <h2>Related Content</h2>
     {{#each referencedFragments}}
       <article id="{{anchorId}}">
-        <h3>{{title}}</h3>
-        {{#if hasDescription}}
-          <p>{{description}}</p>
+        <h3>{{properties.title}}</h3>
+        {{#if properties.hasDescription}}
+          <p>{{properties.description}}</p>
         {{/if}}
 
         {{#if hasFields}}
@@ -745,9 +745,9 @@ Custom Data Attributes
 {{#each referencedFragments}}
   <div class="ref-fragment"
        id="{{anchorId}}"
-       data-cf-id="{{id}}"
-       data-path="{{path}}">
-    <h3>{{title}}</h3>
+       data-cf-id="{{properties.id}}"
+       data-path="{{properties.path}}">
+    <h3>{{properties.title}}</h3>
   </div>
 {{/each}}
 
@@ -941,13 +941,13 @@ Example 3: Generic Table View (No Prior Knowledge)
 
       {{#each referencedFragments}}
         <article id="{{anchorId}}" style="margin-bottom: 30px;">
-          <h3>{{title}}</h3>
+          <h3>{{properties.title}}</h3>
 
-          {{#if hasDescription}}
-            <p>{{description}}</p>
+          {{#if properties.hasDescription}}
+            <p>{{properties.description}}</p>
           {{/if}}
 
-          <p><small>Path: {{path}}</small></p>
+          <p><small>Path: {{properties.path}}</small></p>
 
           {{#if hasFields}}
             <table>

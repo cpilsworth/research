@@ -7,7 +7,7 @@ Usage:
   fetch-model-schema.sh \
     --base-url <aem-base-url> \
     --auth-header "Authorization: Bearer <token>" \
-    --tennant-name <name> \
+    --tenant-name <name> \
     [--model-id <id> | --model-name <name>] \
     [--model-dir-name <name>] \
     [--src-root <dir>] \
@@ -20,11 +20,11 @@ Description:
   writes normalized field metadata for template generation.
 
 Outputs:
-  src/<tennantName>/models.json
-  src/<tennantName>/<modelName>/model-id.txt
-  src/<tennantName>/<modelName>/model-path.txt
-  src/<tennantName>/<modelName>/schema.json
-  src/<tennantName>/<modelName>/field-map.json
+  src/<tenantName>/models.json
+  src/<tenantName>/<modelName>/model-id.txt
+  src/<tenantName>/<modelName>/model-path.txt
+  src/<tenantName>/<modelName>/schema.json
+  src/<tenantName>/<modelName>/field-map.json
 
 `--out-dir` can override only the model-level output directory:
   <out-dir>/model-id.txt
@@ -50,7 +50,7 @@ BASE_URL=""
 AUTH_HEADER=""
 MODEL_ID=""
 MODEL_NAME=""
-TENNANT_NAME=""
+TENANT_NAME=""
 MODEL_DIR_NAME=""
 SRC_ROOT="./src"
 MODELS_URL=""
@@ -75,8 +75,13 @@ while [[ $# -gt 0 ]]; do
       MODEL_NAME="$2"
       shift 2
       ;;
+    --tenant-name)
+      TENANT_NAME="$2"
+      shift 2
+      ;;
     --tennant-name)
-      TENNANT_NAME="$2"
+      echo "Warning: --tennant-name is deprecated; use --tenant-name" >&2
+      TENANT_NAME="$2"
       shift 2
       ;;
     --model-dir-name)
@@ -121,8 +126,8 @@ if [[ -z "$AUTH_HEADER" ]]; then
   usage >&2
   exit 1
 fi
-if [[ -z "$TENNANT_NAME" ]]; then
-  echo "Error: --tennant-name is required" >&2
+if [[ -z "$TENANT_NAME" ]]; then
+  echo "Error: --tenant-name is required" >&2
   usage >&2
   exit 1
 fi
@@ -158,11 +163,11 @@ print(value or "model")
 PY
 )"
 
-TENNANT_DIR="$SRC_ROOT/$TENNANT_NAME"
-MODEL_OUT_DIR="${OUT_DIR:-$TENNANT_DIR/$MODEL_DIR_NAME}"
+TENANT_DIR="$SRC_ROOT/$TENANT_NAME"
+MODEL_OUT_DIR="${OUT_DIR:-$TENANT_DIR/$MODEL_DIR_NAME}"
 
-mkdir -p "$TENNANT_DIR" "$MODEL_OUT_DIR"
-MODELS_JSON="$TENNANT_DIR/models.json"
+mkdir -p "$TENANT_DIR" "$MODEL_OUT_DIR"
+MODELS_JSON="$TENANT_DIR/models.json"
 SCHEMA_JSON="$MODEL_OUT_DIR/schema.json"
 FIELD_MAP_JSON="$MODEL_OUT_DIR/field-map.json"
 MODEL_ID_TXT="$MODEL_OUT_DIR/model-id.txt"
@@ -175,7 +180,7 @@ curl -fsS \
   "$MODELS_URL" > "$MODELS_JSON"
 
 if [[ -z "$MODEL_ID" ]]; then
-  MODEL_ID="$({
+  MODEL_ID="$(
     python3 - "$MODELS_JSON" "$MODEL_NAME" <<'PY'
 import json
 import sys
@@ -209,7 +214,7 @@ for c in items:
 
 sys.exit(1)
 PY
-  } )" || true
+  )" || true
 fi
 
 if [[ -z "$MODEL_ID" ]]; then

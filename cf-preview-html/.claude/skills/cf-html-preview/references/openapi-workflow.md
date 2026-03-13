@@ -50,12 +50,12 @@ If an array item needs direct indexing, use `.[0]` form:
 - `{{{fields.tags.[0]}}}`
 
 Persist outputs using the standard layout:
-- Tenant-level output: `src/{tennantName}/models.json`
-- Model-level output: `src/{tennantName}/{modelName}/model-id.txt`
-- Model-level output: `src/{tennantName}/{modelName}/model-path.txt`
-- Model-level output: `src/{tennantName}/{modelName}/schema.json`
-- Model-level output: `src/{tennantName}/{modelName}/field-map.json`
-- Model-level output: HTML template file(s), for example `src/{tennantName}/{modelName}/cf-preview-template.html`
+- Tenant-level output: `src/{tenantName}/models.json`
+- Model-level output: `src/{tenantName}/{modelName}/model-id.txt`
+- Model-level output: `src/{tenantName}/{modelName}/model-path.txt`
+- Model-level output: `src/{tenantName}/{modelName}/schema.json`
+- Model-level output: `src/{tenantName}/{modelName}/field-map.json`
+- Model-level output: HTML template file(s), for example `src/{tenantName}/{modelName}/cf-preview-template.html`
 
 ## 4) Decide hydration depth for references
 

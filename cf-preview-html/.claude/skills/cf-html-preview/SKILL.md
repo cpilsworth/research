@@ -26,16 +26,16 @@ Use model metadata from the target AEM environment before generating template ma
   - `https://developer.adobe.com/experience-cloud/experience-manager-apis/api/stable/contentfragments/delivery/#operation/models/getModelSchema`
 - Build a working field map from schema properties (field name, type, multi-value flag, reference/asset behavior).
 - Prefer the bundled helper to fetch and normalize model metadata:
-  - `scripts/fetch-model-schema.sh --base-url <env-url> --auth-header "Authorization: Bearer <token>" --tennant-name <tennantName> --model-id <id>`
+  - `scripts/fetch-model-schema.sh --base-url <env-url> --auth-header "Authorization: Bearer <token>" --tenant-name <tenantName> --model-id <id>`
   - Use `--model-name` when id is unknown.
   - Use `--model-dir-name` to override the model folder name.
   - Use `--models-url` / `--schema-url-template` when environment-specific endpoints differ.
   - Default output layout:
-    - Tenant-level: `src/{tennantName}/models.json`
-    - Model-level: `src/{tennantName}/{modelName}/model-id.txt`
-    - Model-level: `src/{tennantName}/{modelName}/model-path.txt`
-    - Model-level: `src/{tennantName}/{modelName}/schema.json`
-    - Model-level: `src/{tennantName}/{modelName}/field-map.json`
+    - Tenant-level: `src/{tenantName}/models.json`
+    - Model-level: `src/{tenantName}/{modelName}/model-id.txt`
+    - Model-level: `src/{tenantName}/{modelName}/model-path.txt`
+    - Model-level: `src/{tenantName}/{modelName}/schema.json`
+    - Model-level: `src/{tenantName}/{modelName}/field-map.json`
     - Model-level HTML template output should be written in the same model folder.
 
 3. Identify template intent and data shape.
@@ -113,4 +113,4 @@ Use model metadata from the target AEM environment before generating template ma
 
 Use `references/cf-html-preview-guide.md` for full context object details, advanced examples, troubleshooting, and helper behavior.
 Use `references/openapi-workflow.md` for a concrete `getModels` + `getModelSchema` workflow and schema-to-template mapping rules.
-Use `scripts/fetch-model-schema.sh` to fetch tenant-level `models.json` and model-level metadata (`model-id.txt`, `model-path.txt`, `schema.json`, `field-map.json`) in `src/{tennantName}/{modelName}`.
+Use `scripts/fetch-model-schema.sh` to fetch tenant-level `models.json` and model-level metadata (`model-id.txt`, `model-path.txt`, `schema.json`, `field-map.json`) in `src/{tenantName}/{modelName}`.
