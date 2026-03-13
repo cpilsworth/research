@@ -153,6 +153,82 @@
         text-decoration: none;
         color: var(--text);
       }
+
+      /* ── CSS props table ────────────────────────────── */
+
+      .prop-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 0.75rem;
+        font-size: 0.9rem;
+      }
+
+      .prop-table th {
+        text-align: left;
+        padding: 0.5rem 0.75rem;
+        border-bottom: 2px solid var(--border);
+        color: var(--text);
+        font-weight: 600;
+      }
+
+      .prop-table td {
+        padding: 0.5rem 0.75rem;
+        border-bottom: 1px solid var(--border);
+        color: var(--muted);
+        vertical-align: top;
+      }
+
+      .prop-table tr:last-child td {
+        border-bottom: none;
+      }
+
+      .prop-name {
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 0.85em;
+        color: var(--accent);
+        white-space: nowrap;
+      }
+
+      /* ── Styled examples ────────────────────────────── */
+
+      .example {
+        margin-top: 1.5rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid var(--border);
+      }
+
+      .example:first-of-type {
+        margin-top: 0.75rem;
+        padding-top: 0;
+        border-top: none;
+      }
+
+      .example h3 {
+        margin: 0 0 0.75rem;
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--text);
+      }
+
+      .example-body {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+        align-items: start;
+      }
+
+      .example-player {
+        width: 100% !important;
+        aspect-ratio: 16 / 9 !important;
+        border-radius: 16px;
+        overflow: hidden;
+      }
+
+      @media (max-width: 640px) {
+        .example-body {
+          grid-template-columns: 1fr;
+        }
+      }
     </style>
   </head>
   <body>
@@ -201,12 +277,148 @@
         <h2>Supported Attributes</h2>
         <ul>
           <li><code>src</code>: required Dynamic Media <code>/play</code> URL.</li>
-          <li><code>token</code>: optional secure-delivery token.</li>
+          <li><code>token</code>: optional secure-delivery token. Falls back to any <code>token</code> query param in <code>src</code>.</li>
           <li><code>autoplay</code>: optional boolean attribute.</li>
           <li><code>controls</code>: optional boolean attribute, defaults to <code>true</code>.</li>
           <li><code>letterboxed</code>: optional boolean attribute, defaults to <code>false</code>.</li>
           <li><code>proxy-base-path</code>: optional same-origin proxy base path when a host server rewrites manifests and media.</li>
+          <li><code>styles</code>: raw CSS string scoped automatically to this instance. Rules are prefixed with the container ID so they never affect other players. Also settable via the <code>customStyles</code> JS property.</li>
+          <li><code>stylesheet</code>: URL of an external CSS file to load. Reference-counted across instances and removed when the last instance that requested it disconnects.</li>
         </ul>
+      </section>
+
+      <section class="info">
+        <h2>Styling</h2>
+        <p>
+          Theme the player with CSS custom properties, scoped <code>styles</code> attribute CSS, or an external <code>stylesheet</code>.
+          Custom properties are set on the element's <code>style</code> attribute (or any ancestor in the cascade).
+        </p>
+
+        <table class="prop-table">
+          <thead>
+            <tr><th>Custom property</th><th>What it controls</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="prop-name">--vjs-control-bar-bg</td><td>Control bar background color</td></tr>
+            <tr><td class="prop-name">--vjs-progress-color</td><td>Played-progress fill color</td></tr>
+            <tr><td class="prop-name">--vjs-load-progress-color</td><td>Buffered-progress fill color</td></tr>
+            <tr><td class="prop-name">--vjs-big-play-bg</td><td>Big play button background</td></tr>
+            <tr><td class="prop-name">--vjs-big-play-border</td><td>Big play button border color</td></tr>
+            <tr><td class="prop-name">--vjs-big-play-color</td><td>Big play button icon color</td></tr>
+            <tr><td class="prop-name">--vjs-volume-bar-color</td><td>Volume level fill color</td></tr>
+            <tr><td class="prop-name">--vjs-control-color</td><td>Control bar button icon color</td></tr>
+          </tbody>
+        </table>
+
+        <pre style="margin-top:1rem"><code>&lt;!-- CSS custom properties --&gt;
+&lt;adobe-dm-video-player
+  src="…/play"
+  style="--vjs-progress-color: #d55824; --vjs-big-play-bg: #d55824;"
+&gt;&lt;/adobe-dm-video-player&gt;
+
+&lt;!-- Scoped CSS via styles attribute (auto-prefixed to this instance) --&gt;
+&lt;adobe-dm-video-player
+  src="…/play"
+  styles=".vjs-big-play-button { border-radius: 50%; }"
+&gt;&lt;/adobe-dm-video-player&gt;
+
+&lt;!-- External stylesheet (loaded once, ref-counted) --&gt;
+&lt;adobe-dm-video-player
+  src="…/play"
+  stylesheet="/styles/player-theme.css"
+&gt;&lt;/adobe-dm-video-player&gt;</code></pre>
+
+        <h2>Styled Examples</h2>
+
+        <div class="example">
+          <h3>Branded — orange controls</h3>
+          <div class="example-body">
+            <adobe-dm-video-player
+              class="example-player"
+              src="https://delivery-p31359-e1338271.adobeaemcloud.com/adobe/assets/urn:aaid:aem:7091fd88-9d0f-4aa6-8bfb-2746ce1d815f/play"
+              controls
+              style="min-height:0; --vjs-control-bar-bg:#d55824; --vjs-progress-color:#fff; --vjs-load-progress-color:rgba(255,255,255,0.3); --vjs-big-play-bg:#d55824; --vjs-big-play-border:transparent; --vjs-big-play-color:#fff; --vjs-control-color:#fff; --vjs-volume-bar-color:rgba(255,255,255,0.7);"
+            ></adobe-dm-video-player>
+            <pre><code>&lt;adobe-dm-video-player
+  src="…/play"
+  style="
+    --vjs-control-bar-bg: #d55824;
+    --vjs-progress-color: #fff;
+    --vjs-load-progress-color:
+      rgba(255,255,255,0.3);
+    --vjs-big-play-bg: #d55824;
+    --vjs-big-play-border: transparent;
+    --vjs-big-play-color: #fff;
+    --vjs-control-color: #fff;
+    --vjs-volume-bar-color:
+      rgba(255,255,255,0.7);
+  "
+&gt;&lt;/adobe-dm-video-player&gt;</code></pre>
+          </div>
+        </div>
+
+        <div class="example">
+          <h3>Cinema — dark with purple accent</h3>
+          <div class="example-body">
+            <adobe-dm-video-player
+              class="example-player"
+              src="https://delivery-p31359-e1338271.adobeaemcloud.com/adobe/assets/urn:aaid:aem:7091fd88-9d0f-4aa6-8bfb-2746ce1d815f/play"
+              controls
+              style="min-height:0; --vjs-control-bar-bg:#0d0d1a; --vjs-progress-color:#a78bfa; --vjs-load-progress-color:rgba(167,139,250,0.25); --vjs-big-play-bg:rgba(13,13,26,0.8); --vjs-big-play-border:#a78bfa; --vjs-big-play-color:#a78bfa; --vjs-control-color:#a78bfa; --vjs-volume-bar-color:#a78bfa;"
+            ></adobe-dm-video-player>
+            <pre><code>&lt;adobe-dm-video-player
+  src="…/play"
+  style="
+    --vjs-control-bar-bg: #0d0d1a;
+    --vjs-progress-color: #a78bfa;
+    --vjs-load-progress-color:
+      rgba(167,139,250,0.25);
+    --vjs-big-play-bg: rgba(13,13,26,0.8);
+    --vjs-big-play-border: #a78bfa;
+    --vjs-big-play-color: #a78bfa;
+    --vjs-control-color: #a78bfa;
+    --vjs-volume-bar-color: #a78bfa;
+  "
+&gt;&lt;/adobe-dm-video-player&gt;</code></pre>
+          </div>
+        </div>
+
+        <div class="example">
+          <h3>Minimal — translucent bar, circular play button</h3>
+          <div class="example-body">
+            <adobe-dm-video-player
+              class="example-player"
+              src="https://delivery-p31359-e1338271.adobeaemcloud.com/adobe/assets/urn:aaid:aem:7091fd88-9d0f-4aa6-8bfb-2746ce1d815f/play"
+              controls
+              style="min-height:0; --vjs-control-bar-bg:rgba(0,0,0,0.45); --vjs-progress-color:#fff; --vjs-load-progress-color:rgba(255,255,255,0.2); --vjs-big-play-bg:rgba(255,255,255,0.12); --vjs-big-play-border:rgba(255,255,255,0.7); --vjs-big-play-color:#fff; --vjs-control-color:rgba(255,255,255,0.85); --vjs-volume-bar-color:#fff;"
+              styles=".vjs-big-play-button { border-radius: 50%; width: 2.5em; height: 2.5em; line-height: 2.5em; margin-top: -1.25em; margin-left: -1.25em; }"
+            ></adobe-dm-video-player>
+            <pre><code>&lt;adobe-dm-video-player
+  src="…/play"
+  style="
+    --vjs-control-bar-bg: rgba(0,0,0,0.45);
+    --vjs-progress-color: #fff;
+    --vjs-load-progress-color:
+      rgba(255,255,255,0.2);
+    --vjs-big-play-bg: rgba(255,255,255,0.12);
+    --vjs-big-play-border: rgba(255,255,255,0.7);
+    --vjs-big-play-color: #fff;
+    --vjs-control-color: rgba(255,255,255,0.85);
+    --vjs-volume-bar-color: #fff;
+  "
+  styles="
+    .vjs-big-play-button {
+      border-radius: 50%;
+      width: 2.5em; height: 2.5em;
+      line-height: 2.5em;
+      margin-top: -1.25em;
+      margin-left: -1.25em;
+    }
+  "
+&gt;&lt;/adobe-dm-video-player&gt;</code></pre>
+          </div>
+        </div>
+
       </section>
 
       <section class="info">
