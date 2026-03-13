@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Adobe Dynamic Media Video Player Web Component</title>
+    <style>
+      :root {
+        color-scheme: light;
+        font-family: "Avenir Next", Avenir, "Segoe UI", sans-serif;
+        background:
+          radial-gradient(circle at top, rgba(244, 86, 45, 0.2), transparent 38%),
+          linear-gradient(180deg, #f7f2ea 0%, #efe5d7 100%);
+        color: #221b17;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        padding: 2rem;
+      }
+
+      main {
+        width: min(1100px, 100%);
+        display: grid;
+        gap: 1.5rem;
+      }
+
+      h1,
+      p {
+        margin: 0;
+      }
+
+      .card {
+        border: 1px solid rgba(34, 27, 23, 0.12);
+        border-radius: 28px;
+        padding: 1.5rem;
+        background: rgba(255, 252, 247, 0.75);
+        box-shadow: 0 18px 50px rgba(75, 53, 28, 0.12);
+        backdrop-filter: blur(20px);
+      }
+
+      adobe-dm-video-player {
+        width: 100%;
+        aspect-ratio: 16 / 9;
+        border-radius: 18px;
+        overflow: hidden;
+      }
+
+      code {
+        font-family: "IBM Plex Mono", monospace;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <section class="card">
+        <h1>Adobe Dynamic Media Video Player Web Component</h1>
+        <p>Embeds the same Adobe Dynamic Media player runtime without using an iframe.</p>
+      </section>
+
+      <section class="card">
+        <adobe-dm-video-player
+          src="https://delivery-p31359-e1338271.adobeaemcloud.com/adobe/assets/urn:aaid:aem:7091fd88-9d0f-4aa6-8bfb-2746ce1d815f/play"
+          controls
+        ></adobe-dm-video-player>
+      </section>
+
+      <section class="card">
+        <p>Usage: <code>&lt;adobe-dm-video-player src="https://.../play"&gt;&lt;/adobe-dm-video-player&gt;</code></p>
+      </section>
+    </main>
+
+    <script type="module" src="./adobe-dm-video-player.js?v=20260313"></script>
+  </body>
+</html>
