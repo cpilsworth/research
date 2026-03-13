@@ -70,9 +70,7 @@ Use model metadata from the target AEM environment before generating template ma
 - If debugging unknown data, render a temporary table with `allFields`.
 - Include a JSON metadata link to the fragment representation when fragment id is available:
   - Place it in `<head>` as `<link rel="alternate" type="application/json">` with a relative path.
-  - Add an inline `<script>` immediately after to rewrite the href to the correct publish origin at runtime.
-  - This makes the template portable across any AEM Cloud Service instance without code changes.
-  - Read `publish-url.txt` (written by the fetch script) to verify the expected publish URL.
+  - The relative path resolves correctly against the current origin on both author and publish — no JS rewrite needed.
 
 ## Output Rules
 
@@ -80,7 +78,7 @@ Use model metadata from the target AEM environment before generating template ma
 - Use double braces for metadata/booleans/field names (`{{main_cf_title}}`, `{{hasFields}}`, `{{name}}`).
 - Prefer direct `fields.*` access over iterating `allFields` when field names are known.
 - Use schema-derived field names and types from `getModelSchema` as source of truth.
-- Include `<link rel="alternate" type="application/json" ...>` in `<head>` using full publish domain.
+- Include `<link rel="alternate" type="application/json" ...>` in `<head>` using a relative path.
 - Keep markup semantic and minimal.
 
 ## Quick Patterns
@@ -99,18 +97,9 @@ Use model metadata from the target AEM environment before generating template ma
 {{{asset fields.heroImage class="hero-image" loading="lazy"}}}
 {{{text fields.category class="category-badge"}}}
 
-{{! Portable JSON metadata link — publish URL derived at runtime from window.location }}
+{{! JSON metadata link — relative path resolves correctly on any origin }}
 {{#if properties.id}}
   <link rel="alternate" type="application/json" href="/adobe/contentFragments/{{properties.id}}?references=all-hydrated">
-  <script>
-    (function () {
-      var link = document.querySelector('link[rel="alternate"][type="application/json"]');
-      if (link) {
-        var publishHost = location.hostname.replace(/^author-/, 'publish-');
-        link.href = location.protocol + '//' + publishHost + link.getAttribute('href');
-      }
-    }());
-  </script>
 {{/if}}
 ```
 
@@ -123,7 +112,7 @@ Use model metadata from the target AEM environment before generating template ma
 - Multi-valued fields are iterated, not stringified.
 - Nested references resolve at expected hydration depth.
 - Asset fields render as HTML (not escaped text).
-- `<head>` contains a JSON metadata link with `?references=all-hydrated` and an inline script to rewrite the href to the publish origin at runtime.
+- `<head>` contains a JSON metadata link with `?references=all-hydrated` using a relative path.
 - No unclosed Handlebars blocks.
 
 ## Reference
