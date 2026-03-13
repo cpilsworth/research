@@ -1,0 +1,266 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Research: Adobe Dynamic Media Video Player Web Component</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f3ede4;
+        --panel: rgba(255, 250, 244, 0.86);
+        --panel-strong: rgba(255, 248, 240, 0.96);
+        --border: rgba(60, 42, 28, 0.14);
+        --text: #251b14;
+        --muted: #6f5a4a;
+        --accent: #d55824;
+        --accent-soft: rgba(213, 88, 36, 0.14);
+        --shadow: 0 24px 60px rgba(73, 49, 27, 0.14);
+        font-family: "Avenir Next", Avenir, "Segoe UI", sans-serif;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        background:
+          radial-gradient(circle at top, rgba(213, 88, 36, 0.2), transparent 32%),
+          linear-gradient(180deg, #f8f4ec 0%, var(--bg) 100%);
+      }
+
+      body {
+        margin: 0;
+        color: var(--text);
+        min-height: 100vh;
+      }
+
+      main {
+        width: min(1120px, calc(100% - 2rem));
+        margin: 0 auto;
+        padding: 2rem 0 3rem;
+        display: grid;
+        gap: 1.25rem;
+      }
+
+      section {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 28px;
+        box-shadow: var(--shadow);
+        padding: 1.5rem;
+        backdrop-filter: blur(16px);
+      }
+
+      .hero {
+        background:
+          linear-gradient(135deg, rgba(255, 255, 255, 0.7), rgba(255, 247, 239, 0.96)),
+          linear-gradient(135deg, rgba(213, 88, 36, 0.09), transparent);
+      }
+
+      .hero h1,
+      .demo h2,
+      .info h2 {
+        margin: 0 0 0.5rem;
+        line-height: 1.05;
+      }
+
+      .hero h1 {
+        font-size: clamp(2rem, 4vw, 4rem);
+        letter-spacing: -0.04em;
+      }
+
+      p,
+      li {
+        color: var(--muted);
+        line-height: 1.6;
+      }
+
+      .hero p {
+        max-width: 70ch;
+        margin: 0;
+        font-size: 1.05rem;
+      }
+
+      .meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.6rem;
+        margin-top: 1rem;
+      }
+
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        border-radius: 999px;
+        padding: 0.45rem 0.8rem;
+        background: var(--accent-soft);
+        color: var(--text);
+        font-size: 0.92rem;
+      }
+
+      .demo {
+        background: var(--panel-strong);
+      }
+
+      adobe-dm-video-player {
+        display: block;
+        width: 100%;
+        aspect-ratio: 16 / 9;
+        border-radius: 20px;
+        overflow: hidden;
+        margin-top: 1rem;
+      }
+
+      .grid {
+        display: grid;
+        gap: 1.25rem;
+      }
+
+      @media (min-width: 900px) {
+        .grid {
+          grid-template-columns: 1.1fr 0.9fr;
+        }
+      }
+
+      .info h2 {
+        font-size: 1.2rem;
+      }
+
+      .info p,
+      .info ul,
+      .info pre {
+        margin: 0.65rem 0 0;
+      }
+
+      ul {
+        padding-left: 1.1rem;
+      }
+
+      pre {
+        overflow-x: auto;
+        padding: 1rem;
+        border-radius: 18px;
+        background: #1f1712;
+        color: #f8ede5;
+      }
+
+      code {
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 0.94em;
+      }
+
+      .footnote,
+      .backlink {
+        font-size: 0.92rem;
+      }
+
+      .backlink {
+        text-decoration: none;
+        color: var(--text);
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <section class="hero">
+        <a class="backlink" href="../">Back to project index</a>
+        <h1>Adobe Dynamic Media Video Player Web Component</h1>
+        <p>
+          This experiment wraps Adobe's Dynamic Media HTML5 video player in a reusable Web Component so it can be embedded
+          directly in another page without relying on an iframe.
+        </p>
+        <div class="meta">
+          <span class="pill">Custom element: <code>&lt;adobe-dm-video-player&gt;</code></span>
+          <span class="pill">Uses Adobe hosted viewer runtime</span>
+          <span class="pill">Designed for direct page embedding</span>
+        </div>
+      </section>
+
+      <section class="demo">
+        <h2>Live Demo</h2>
+        <p>The player below is initialized by the Web Component rather than loaded inside an iframe.</p>
+        <adobe-dm-video-player
+          src="https://delivery-p31359-e1338271.adobeaemcloud.com/adobe/assets/urn:aaid:aem:7091fd88-9d0f-4aa6-8bfb-2746ce1d815f/play"
+          controls
+        ></adobe-dm-video-player>
+      </section>
+
+      <div class="grid">
+        <section class="info">
+          <h2>What This Folder Contains</h2>
+          <ul>
+            <li><code>adobe-dm-video-player.js</code>: the custom element implementation.</li>
+            <li><code>index.html</code>: the demo page for this published site.</li>
+            <li><code>serve-local.js</code>: the tiny static server used for local testing in the repo.</li>
+          </ul>
+
+          <h2>Usage</h2>
+          <pre><code>&lt;script type="module" src="/path/to/adobe-dm-video-player.js"&gt;&lt;/script&gt;
+
+&lt;adobe-dm-video-player
+  src="https://delivery-p31359-e1338271.adobeaemcloud.com/adobe/assets/urn:aaid:aem:7091fd88-9d0f-4aa6-8bfb-2746ce1d815f/play"
+  controls
+&gt;
+&lt;/adobe-dm-video-player&gt;</code></pre>
+
+          <h2>Supported Attributes</h2>
+          <ul>
+            <li><code>src</code>: required Dynamic Media <code>/play</code> URL.</li>
+            <li><code>token</code>: optional secure-delivery token.</li>
+            <li><code>autoplay</code>: optional boolean attribute.</li>
+            <li><code>controls</code>: optional boolean attribute, defaults to <code>true</code>.</li>
+            <li><code>letterboxed</code>: optional boolean attribute, defaults to <code>false</code>.</li>
+            <li><code>proxy-base-path</code>: optional same-origin proxy base path when a host server rewrites manifests and media.</li>
+          </ul>
+        </section>
+
+        <section class="info">
+          <h2>How It Works</h2>
+          <p>
+            The component loads Adobe's hosted viewer CSS and JavaScript once per page, derives the HLS manifest, DASH manifest,
+            and poster image from the supplied <code>/play</code> URL, and mounts the Adobe player into a normal DOM container.
+          </p>
+          <p>
+            It uses light DOM rather than shadow DOM because Adobe's viewer runtime looks up its mount node with
+            <code>document.getElementById(...)</code>.
+          </p>
+
+          <h2>Special Video Processing</h2>
+          <p>
+            Dynamic Media manifests can contain relative media references. When a host page uses a different origin, those
+            references may need to be rewritten through a same-origin proxy path so the player can still resolve child playlists,
+            MP4 fragments, and DASH assets correctly.
+          </p>
+          <p>
+            DASH rewrites also need valid XML escaping when query parameters are inserted into MPD attributes. Without that,
+            the browser can reject the source as unsupported even when the media itself is valid.
+          </p>
+
+          <h2>Benefits And Tradeoffs</h2>
+          <p>
+            Compared with an iframe, the Web Component integrates much more cleanly with the host page: layout is simpler,
+            responsiveness is better, and host code can interact with the player more naturally.
+          </p>
+          <p>
+            The tradeoff is that the embedding page now owns more complexity. Script loading, player lifecycle, cross-origin
+            media handling, and any manifest proxying are the responsibility of the host implementation instead of Adobe's
+            standalone player page.
+          </p>
+        </section>
+      </div>
+
+      <section class="info">
+        <h2>Notes</h2>
+        <ul>
+          <li>The component loads Adobe hosted viewer assets once per page.</li>
+          <li>The published page includes the same README-level guidance directly in the HTML for quick reference.</li>
+          <li class="footnote">For local repo testing, run <code>node serve-local.js</code> from the <code>dm-video-player</code> folder and open <code>http://127.0.0.1:4173</code>.</li>
+        </ul>
+      </section>
+
+      <script type="module" src="./adobe-dm-video-player.js?v=20260313"></script>
+    </main>
+  </body>
+</html>

@@ -33,20 +33,29 @@
       box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
     }
     .offer-media {
+      max-height: 250px;
+      width: 100%;
       line-height: 0;
       border-bottom: 1px solid var(--border);
     }
+    .offer-media img {
+      display: block;
+      width: 100%;
+    }
     .offer-body {
       padding: 24px;
+      background-color: rgba(0, 0, 0, .25);
+      position: relative;
     }
     .offer-title {
+      color: var(--surface);
       margin: 0 0 10px;
       font-size: 2rem;
       line-height: 1.2;
     }
     .offer-description {
+      color: var(--surface);
       margin: 0;
-      color: var(--muted);
     }
     .offer-actions {
       margin-top: 20px;

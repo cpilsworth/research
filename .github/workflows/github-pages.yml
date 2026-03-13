@@ -33,7 +33,8 @@ jobs:
         run: |
           mkdir -p .site
           cp -R docs/. .site/
-          cp dm-video-player/adobe-dm-video-player.js .site/adobe-dm-video-player.js
+          mkdir -p .site/dm-video-player
+          cp dm-video-player/adobe-dm-video-player.js .site/dm-video-player/adobe-dm-video-player.js
 
       - name: Upload site artifact
         uses: actions/upload-pages-artifact@v3

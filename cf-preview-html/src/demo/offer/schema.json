@@ -1,1 +1,81 @@
-{"id":"L2NvbmYvQmFyY2xheXMvc2V0dGluZ3MvZGFtL2NmbS9tb2RlbHMvb2ZmZXI","path":"/conf/Barclays/settings/dam/cfm/models/offer","name":"Offer","technicalName":"offer","created":{"at":"2025-04-10T12:56:01.118Z","by":"chrisp@adobe.com","fullName":"Chris Pilsworth"},"modified":{"at":"2025-04-10T14:18:47.426Z","by":"chrisp@adobe.com","fullName":"Chris Pilsworth"},"published":{"at":"2025-04-24T08:44:56.764Z","by":"chrisp@adobe.com","fullName":"Chris Pilsworth"},"locked":true,"status":"enabled","replicationStatus":"PUBLISHED","previewReplicationStatus":"NEVER_PUBLISHED","fields":[{"name":"title","label":"Title","required":true,"multiple":false,"type":"text","maxLength":255,"unique":false,"translatable":false,"validationType":"none"},{"name":"description","label":"Description","required":false,"multiple":false,"type":"long-text","mimeType":"text/html","allowFragmentReference":false,"translatable":false},{"name":"image","label":"Image","required":false,"multiple":false,"type":"content-reference","showThumbnail":false,"root":"/content/dam/barclays","uuidBased":false},{"name":"ctaText","label":"CTA Text","required":false,"multiple":false,"type":"text","maxLength":255,"unique":false,"translatable":false,"validationType":"none"},{"name":"ctaLink","label":"CTA Link","required":false,"multiple":false,"type":"text","maxLength":255,"unique":false,"translatable":false,"validationType":"none"}],"tags":[]}
+{
+    "id": "L2NvbmYvQmFyY2xheXMvc2V0dGluZ3MvZGFtL2NmbS9tb2RlbHMvb2ZmZXI",
+    "path": "/conf/Barclays/settings/dam/cfm/models/offer",
+    "name": "Offer",
+    "technicalName": "offer",
+    "created": {
+        "at": "2025-04-10T12:56:01.118Z",
+        "by": "chrisp@adobe.com",
+        "fullName": "Chris Pilsworth"
+    },
+    "modified": {
+        "at": "2025-04-10T14:18:47.426Z",
+        "by": "chrisp@adobe.com",
+        "fullName": "Chris Pilsworth"
+    },
+    "published": {
+        "at": "2025-04-24T08:44:56.764Z",
+        "by": "chrisp@adobe.com",
+        "fullName": "Chris Pilsworth"
+    },
+    "locked": true,
+    "status": "enabled",
+    "replicationStatus": "PUBLISHED",
+    "previewReplicationStatus": "NEVER_PUBLISHED",
+    "fields": [
+        {
+            "name": "title",
+            "label": "Title",
+            "required": true,
+            "multiple": false,
+            "type": "text",
+            "maxLength": 255,
+            "unique": false,
+            "translatable": false,
+            "validationType": "none"
+        },
+        {
+            "name": "description",
+            "label": "Description",
+            "required": false,
+            "multiple": false,
+            "type": "long-text",
+            "mimeType": "text/html",
+            "allowFragmentReference": false,
+            "translatable": false
+        },
+        {
+            "name": "image",
+            "label": "Image",
+            "required": false,
+            "multiple": false,
+            "type": "content-reference",
+            "showThumbnail": false,
+            "root": "/content/dam/barclays",
+            "uuidBased": false
+        },
+        {
+            "name": "ctaText",
+            "label": "CTA Text",
+            "required": false,
+            "multiple": false,
+            "type": "text",
+            "maxLength": 255,
+            "unique": false,
+            "translatable": false,
+            "validationType": "none"
+        },
+        {
+            "name": "ctaLink",
+            "label": "CTA Link",
+            "required": false,
+            "multiple": false,
+            "type": "text",
+            "maxLength": 255,
+            "unique": false,
+            "translatable": false,
+            "validationType": "none"
+        }
+    ],
+    "tags": []
+}
