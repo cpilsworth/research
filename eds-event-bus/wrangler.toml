@@ -1,0 +1,20 @@
+name = "eds-event-bus"
+main = "index.js"
+compatibility_date = "2024-01-01"
+
+# Cron trigger — every minute
+[triggers]
+crons = ["* * * * *"]
+
+# KV namespace for persisting poll cursors between invocations
+[[kv_namespaces]]
+binding = "EDS_CURSORS"
+id = "<your-kv-namespace-id>"
+
+# --- Configuration ---
+# Set SITES and REPUBLISH_RULES as JSON strings.
+# Auth token should be set as a secret: `wrangler secret put EDS_AUTH_TOKEN`
+
+[vars]
+SITES = '[{ "org": "my-org", "site": "my-site", "ref": "main" }]'
+REPUBLISH_RULES = '[{ "match": "^/products/.*", "targets": [{ "org": "my-org", "site": "storefront", "path": "/product-feed" }] }]'
