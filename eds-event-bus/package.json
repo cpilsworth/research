@@ -1,0 +1,15 @@
+{
+  "name": "eds-event-bus",
+  "version": "1.0.0",
+  "description": "Cloudflare Worker that polls EDS activity logs and dispatches events to handlers",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "tail": "wrangler tail"
+  },
+  "devDependencies": {
+    "wrangler": "^3"
+  }
+}
