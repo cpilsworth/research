@@ -1,1 +1,0 @@
-/conf/Barclays/settings/dam/cfm/models/offer
