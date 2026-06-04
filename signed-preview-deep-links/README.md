@@ -111,6 +111,107 @@ expired (i.e. at most one TTL window after switching signing to the new key).
 
 ---
 
+## URL Generation & Delivery
+
+### Signing architecture
+
+Two approaches, with different key custody models:
+
+**Client-side signing (simpler, no server needed)**
+
+The private key lives in the browser, stored as a non-extractable `CryptoKey` in
+`IndexedDB` via the Web Crypto API. Signing happens entirely in-browser; no request
+leaves the page.
+
+```
+Author logs in → web app loads key from IndexedDB (or prompts to import on first use)
+     → SubtleCrypto.sign("ECDSA", key, data) → JWT → deep link URL
+```
+
+- Key is marked `extractable: false` so the browser will not expose the raw bytes to
+  JavaScript, even to the page that created it.
+- Downside: key is tied to one browser profile. If the author clears storage or switches
+  browsers, the key must be re-imported.
+
+**Server-side signing (better key management)**
+
+The private key lives on a backend (e.g. a Worker, Lambda, or internal API). The web
+app authenticates the user, then calls the signing endpoint with the requested path and
+TTL. The server validates the caller's identity and returns a signed token.
+
+```
+Author logs in → web app POSTs { path, ttl } to /api/sign-preview
+     → server verifies auth → signs JWT → returns token → web app builds deep link
+```
+
+- Centralises key custody; easier to rotate and audit.
+- Requires an authenticated endpoint — the signing endpoint must not be callable
+  anonymously or it becomes the forgery vector.
+
+### Web Crypto signing (client-side)
+
+```js
+const key = await crypto.subtle.importKey(
+  'jwk', privateKeyJwk,
+  { name: 'ECDSA', namedCurve: 'P-256' },
+  false,           // non-extractable
+  ['sign']
+);
+
+const header  = base64url(JSON.stringify({ alg: 'ES256', typ: 'JWT', kid: 'preview-v1' }));
+const payload = base64url(JSON.stringify({ sub, path, src: 'page', iat, exp }));
+const message = `${header}.${payload}`;
+
+const sigBuf = await crypto.subtle.sign(
+  { name: 'ECDSA', hash: 'SHA-256' },
+  key,
+  new TextEncoder().encode(message)
+);
+// SubtleCrypto returns IEEE P1363 (raw R‖S) by default for ECDSA — correct format for the app
+const token = `${message}.${base64url(sigBuf)}`;
+const deepLink = `myapp://home?token=${token}`;
+```
+
+Note: `SubtleCrypto.sign` with ECDSA returns raw R‖S by default — no conversion needed,
+unlike Node.js where `dsaEncoding: 'ieee-p1363'` must be set explicitly.
+
+### Delivery to the user's device
+
+The web app has the deep link URL. Getting it onto the device depends on context:
+
+**QR code (recommended for cross-device)**
+Render the URL as a QR code in the browser (e.g. via `qrcode` JS library). The author
+opens the web app on a desktop or laptop, scans the QR with their test device's camera.
+iOS and Android both recognise `myapp://` scheme QR codes and offer to open the app
+directly without requiring a separate scan step.
+
+**Tap-to-open (same device)**
+If the author is using the web app on the same device as the app under test, a plain
+`<a href="myapp://home?token=...">Open in app</a>` is sufficient. The OS intercepts
+the navigation and routes it to the registered app.
+
+**Copy link / share sheet**
+A copy-to-clipboard button lets the author paste the URL into Messages, Slack, or email.
+Recipients tap the link on their device; the OS opens the app if installed, or falls
+through to a fallback URL if not (see below).
+
+### Fallback for uninstalled app
+
+A raw `myapp://` URL silently fails if the app is not installed. For shared links,
+wrap the deep link in a redirect page or use a universal link / App Link:
+
+- **iOS Universal Links**: serve an `apple-app-site-association` file at
+  `/.well-known/apple-app-site-association` on the content domain. iOS routes matching
+  HTTPS URLs to the app if installed, to Safari if not.
+- **Android App Links**: serve a `assetlinks.json` file at
+  `/.well-known/assetlinks.json`. Same pattern.
+
+With universal/app links the distributed URL is a normal HTTPS URL
+(`https://<content-domain>/preview?token=...`) rather than a custom scheme, which also
+survives copy-paste through tools that strip unknown URL schemes.
+
+---
+
 ## Considerations
 
 - **No revocation**: tokens are valid until `exp`. Short TTL (30–60 min) is the
