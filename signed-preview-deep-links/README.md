@@ -161,10 +161,15 @@ expired (i.e. at most one TTL window after switching signing to the new key).
 - Both iOS (`CryptoKit`) and Android (`java.security`, API 23+) can verify ES256 with
   raw R‖S signatures without any third-party JWT library — the token format is a thin
   wrapper around a standard ECDSA signature and base64url encoding.
-- Artefacts committed: `app/ContentPreview/ContentPreview/JWTVerifier.swift`,
-  `app/ContentPreview/ContentPreview/ContentView.swift`, `tools/sign-preview-link.js`,
-  `app/ContentPreview/Info2.plist`, `app/ContentPreview/PREVIEW_MODE.md`.
-  Private key gitignored via `.gitignore`.
+- **Session `previewActive` flag — iOS**: store as a `@Published` property on an
+  `ObservableObject` held in memory (e.g. via `@StateObject` at the root view). It lives
+  only for the process lifetime — no `UserDefaults` or keychain write. The flag is set
+  in the `onOpenURL` / `onContinueUserActivity` handler after successful JWT verification.
+- **Session `previewActive` flag — Android**: store as a property on an
+  `Application`-scoped object (a Kotlin `object` singleton or an `AndroidViewModel`
+  retained at the `Application` level). Set it in the `Activity.onCreate` /
+  `onNewIntent` handler after verification. Scoped to the process; cleared on app
+  restart. Avoid `SharedPreferences` — persistence across sessions is not the intent.
 
 ---
 
