@@ -1,0 +1,23 @@
+# macOS
+.DS_Store
+._*
+.Spotlight-V100
+.Trashes
+
+# Xcode user-specific data (per-developer, not shareable)
+xcuserdata/
+*.xcworkspace/xcuserdata/
+
+# Xcode build output
+build/
+DerivedData/
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# Swift Package Manager
+.build/
+.swiftpm/
+
+# Claude Code local settings
+.claude/settings.local.json
