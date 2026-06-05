@@ -139,25 +139,54 @@ Use three layers so downstream consumers can pick the right level of detail:
 
 ## Example search URLs
 
-### A. Minimal — current API parameters only
+### URL template (profile attributes → query string)
+
+How derived profile attributes map to URL parameters:
 
 ```text
-/api/j2/hotels/getcachedhotels?hotelOrder=1&page=0&pageSize=10
+/api/j2/hotels/getcachedhotels
+  ?hotelOrder=1
+  &page=0
+  &pageSize=10
+  &areas={preferredArea}
+  &resorts={preferredResortId}
+  &starRatings={preferredStarRating}
+  &adults={adultCount}
+  &children={childCount}
+  &pool={primaryAmenityInterest == "pool"}
+  &familyFriendly={travelPartyType == "family"}
+```
+
+### A. Minimal — current API parameters only
+
+Built from area affinity, resort affinity, star preference, and room type — the subset
+the current API already understands:
+
+```text
+https://j2api.cpilsworth.workers.dev/api/j2/hotels/getcachedhotels
+  ?hotelOrder=1&page=0&pageSize=10
   &starRatings=5&areas=Algarve&roomTypeIds=19&resorts=573
 ```
 
-### B. Near-term — add obvious party/amenity params
+### B. Near-term — add party and amenity params
+
+Adds party counts and key boolean filters; API changes required are additive and low-risk:
 
 ```text
-/api/j2/hotels/getcachedhotels?hotelOrder=1&page=0&pageSize=10
+https://j2api.cpilsworth.workers.dev/api/j2/hotels/getcachedhotels
+  ?hotelOrder=1&page=0&pageSize=10
   &areas=Algarve&resorts=573&starRatings=5
   &adults=2&children=2&familyFriendly=true&pool=true&roomTypeIds=19
 ```
 
-### C. Long-term — API accepts intent/ranking hints
+### C. Long-term — API accepts intent and ranking hints
+
+The API receives intent signals and owns the business logic for translating them into
+filters, boosts, and room-type selection:
 
 ```text
-/api/j2/hotels/getcachedhotels?hotelOrder=1&page=0&pageSize=10
+https://j2api.cpilsworth.workers.dev/api/j2/hotels/getcachedhotels
+  ?hotelOrder=1&page=0&pageSize=10
   &areas=Algarve&resorts=573&adults=2&children=2
   &preferredStarRating=5&primaryAmenityInterest=pool
   &rankingMode=family_premium_pool
