@@ -21,3 +21,6 @@ DerivedData/
 
 # Claude Code local settings
 .claude/settings.local.json
+
+# Preview signing private key (never commit)
+tools/preview-private.pem

@@ -173,7 +173,49 @@ const deepLink = `myapp://home?token=${token}`;
 ```
 
 Note: `SubtleCrypto.sign` with ECDSA returns raw R‖S by default — no conversion needed,
-unlike Node.js where `dsaEncoding: 'ieee-p1363'` must be set explicitly.
+unlike Node.js's classic `crypto.sign` API where `dsaEncoding: 'ieee-p1363'` must be set
+explicitly. (Node's `crypto.webcrypto.subtle` is the same WebCrypto API as the browser
+and also returns raw R‖S — see the CLI below.)
+
+### Local signing CLI (Node)
+
+For local development and author tooling, `tools/sign-preview.mjs` mints a signed deep
+link from the command line. It uses Node's WebCrypto (`crypto.webcrypto.subtle`), so the
+signature is raw R‖S with no DER conversion — byte-for-byte what iOS CryptoKit expects.
+
+```bash
+# Mint a token for /digi2/home with a 60-minute TTL and print the deep link
+node tools/sign-preview.mjs /digi2/home 60
+
+# Mint and open it straight into the booted simulator (tap "Open" on the prompt)
+node tools/sign-preview.mjs /digi2/home 60 --open
+
+# Target a specific simulator instead of the booted one
+node tools/sign-preview.mjs /digi2/home 60 --open --device=<udid>
+```
+
+What it does:
+
+1. **Key management** — on first run it generates an ECDSA P-256 key pair, writing the
+   private key to `tools/preview-private.pem` (gitignored) and the public key to
+   `tools/preview-public.pem`. Subsequent runs reuse the saved keys. The first run also
+   prints the public key PEM to paste into the app's `JWTVerifier.publicKeyPEM` — that
+   one paste is what binds the app to this signing key (the local equivalent of
+   publishing the key to JWKS).
+2. **Signing** — builds the header (`{alg:ES256, typ:JWT, kid:preview-v1}`) and payload
+   (`sub`, `path`, `src:"page"`, `iat`, `exp`), base64url-encodes both, and signs
+   `header.payload` with `subtle.sign({name:'ECDSA', hash:'SHA-256'}, …)`.
+3. **Output** — prints `path`, the expiry timestamp, and the full
+   `myapp://home?token=<jwt>` deep link.
+
+The `--open` flag shells out to `xcrun simctl openurl <device> <deepLink>` (`device`
+defaults to `booted`). This is the lowest-friction desktop→simulator path: one command
+mints and launches. iOS still shows a one-time **"Open in <app>?"** confirmation for
+custom-scheme URLs opened externally — unavoidable without Universal Links (see below).
+
+> The CLI rotates the app's trusted key when it generates a fresh pair: tokens signed by
+> any previous private key stop verifying once the new public key is pasted into the app.
+> Keep `preview-private.pem` safe; deleting it forces a new pair and a re-paste.
 
 ### Delivery to the user's device
 

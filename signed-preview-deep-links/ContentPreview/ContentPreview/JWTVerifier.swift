@@ -32,12 +32,18 @@ enum JWTVerifier {
     // The private key is kept in tools/preview-private.pem (never committed).
     private static let publicKeyPEM = """
     -----BEGIN PUBLIC KEY-----
-    MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE/x3OL811m1E48opxcKHJ99KbZM3F
-    XslcBSQEfi2dR3myuLCMOIKeCTuRVBYyGqLqc0JjJP7kJCb9QG8foeBHHg==
+    MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAERblAg2G8aZINLmPzKYXVYQ88/gQL
+    PyFkBgefUOnOFHHcbk2IHZKvXHYSEbz9QIacwzdrNnYfRxOhW2JapVyMTQ==
     -----END PUBLIC KEY-----
     """
 
-    static func verify(_ token: String, expectedPath: String) throws -> PreviewToken {
+    /// Verify signature and expiry without constraining the path. The caller
+    /// can then route based on the returned token's `path` claim.
+    static func verify(_ token: String) throws -> PreviewToken {
+        try verify(token, expectedPath: nil)
+    }
+
+    static func verify(_ token: String, expectedPath: String?) throws -> PreviewToken {
         let parts = token.split(separator: ".", omittingEmptySubsequences: false)
         guard parts.count == 3 else { throw JWTError.invalidFormat }
 
@@ -67,7 +73,7 @@ enum JWTVerifier {
             throw JWTError.invalidPayload
         }
         guard claims.exp > Int(Date().timeIntervalSince1970) else { throw JWTError.expired }
-        guard claims.path == expectedPath else { throw JWTError.pathMismatch }
+        if let expectedPath, claims.path != expectedPath { throw JWTError.pathMismatch }
 
         return PreviewToken(
             subject: claims.sub,
