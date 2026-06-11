@@ -1,0 +1,20 @@
+name: oidc-worker-gate CI
+on:
+  pull_request:
+    paths: ["oidc-worker-gate/**"]
+  push:
+    branches: [main]
+    paths: ["oidc-worker-gate/**"]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: oidc-worker-gate
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - run: npm ci
+      - run: npm test
