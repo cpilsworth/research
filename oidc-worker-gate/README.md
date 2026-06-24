@@ -7,7 +7,7 @@ users against any standards-compliant OpenID Provider (Okta, Entra ID, Ping, Aut
 IMS, …), and enforces access **before** anything reaches the origin — without the EDS
 project itself knowing anything about OIDC.
 
-> **Status: Phase 1 implemented** — 10 source modules, 11 test files, **72 tests passing**
+> **Status: Phase 1 implemented** — 10 source modules, 11 test files, **79 tests passing**
 > in the real `workerd` runtime. This is a research / reference implementation (see
 > [Limitations](#limitations)). The multi-phase roadmap and the implementation record live
 > in [`phase-1-plan.md`](./phase-1-plan.md); identity/folder-authz design is in
@@ -20,7 +20,7 @@ project itself knowing anything about OIDC.
 
   | Tier | Example paths | Unauthenticated behavior |
   | --- | --- | --- |
-  | **public** | `/`, `/blog/*`, `/scripts/*`, `/styles/*`, `/media_*` | Forward to origin, no auth, stays edge-cacheable |
+  | **public** | `/`, `/blog/*`, `/scripts/*`, `/styles/*`, `*/media_*` | Forward to origin, no auth, stays edge-cacheable |
   | **protected** | `/members/*`, `/account/*` | **302 → IdP** (interactive login) |
   | **secured** | `/api/*`, `/secure-data/*` | **401 JSON**, no redirect (for `fetch`/XHR) |
 
@@ -42,23 +42,23 @@ project itself knowing anything about OIDC.
 
 ## How it works
 
-```
-                          ┌──────────────────────────────────────────────┐
-   Browser ──▶ Cloudflare  │            oidc-worker-gate (Worker)           │
-              edge (CF)    │                                                │
-                           │  /.auth/callback , /.auth/logout  ── gate routes
-                           │                                                │
-                           │  classify(path) ─▶ tier                        │
-                           │     public   ───────────────────────▶ forward ─┼──▶ EDS origin
-                           │     protected─ session? yes ─▶ forward ────────┼──▶ main--site--org
-                           │                 │      no  ─▶ 302 login         │      .aem.live
-                           │     secured  ─ session? yes ─▶ forward ────────┼──▶
-                           │                 │      no  ─▶ 401 JSON          │
-                           └───────────────┬────────────────────────────────┘
-                                           │ (login + callback only)
-                                           ▼
-                                OpenID Provider (Okta / Entra / Ping / Auth0 / IMS)
-                           authorize · token · jwks · end_session
+```mermaid
+flowchart LR
+    Browser --> Worker["Worker (CF edge)"]
+    Worker -->|gate route| GR["/.auth/callback\n/.auth/logout"]
+    GR <-.->|"code exchange · end_session"| IdP["OpenID Provider\n(Auth0 / Okta / IMS …)"]
+    Worker -->|content path| CL["classify(path) → tier"]
+    CL -->|public| Origin["EDS origin\nmain--site--org.aem.live"]
+    CL -->|protected| PS{session?}
+    PS -->|"none / expired"| R302["302 → IdP login"]
+    R302 -.-> IdP
+    PS -->|valid| AZ{authorized?}
+    CL -->|secured| SS{session?}
+    SS -->|"none / expired"| U401[401 JSON]
+    SS -->|valid| AZ
+    AZ -->|yes| Origin
+    AZ -->|"no · navigate"| E403["403 origin error page"]
+    AZ -->|"no · XHR/fetch"| J403[403 JSON]
 ```
 
 **Request lifecycle**
@@ -225,7 +225,7 @@ ACCESS_POLICY = '''{
     { "path": "/blocks/*",      "tier": "public" },
     { "path": "/icons/*",       "tier": "public" },
     { "path": "/fonts/*",       "tier": "public" },
-    { "path": "/media_*",       "tier": "public" },
+    { "path": "*/media_*",       "tier": "public" },
     { "path": "/*.plain.html",  "tier": "public" },
     { "path": "/sitemap.xml",   "tier": "public" },
     { "path": "/robots.txt",    "tier": "public" },
@@ -339,7 +339,7 @@ last-known-good keys within a staleness window rather than failing all logins.
 
 ## Testing & conformance
 
-`npm test` runs the full positive/negative matrix (P1–P7, N1–N15 + N4b) against an
+`npm test` runs the full positive/negative matrix (P1–P7, N1–N17 + N4b) against an
 in-process mock OpenID Provider. The negative cases fail closed — a token that fails any
 check never yields a session. CI (`.github/workflows/oidc-worker-gate-ci.yml`) gates every
 change to `oidc-worker-gate/**`. The hosted OpenID Foundation RP suite is a

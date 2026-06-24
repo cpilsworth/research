@@ -26,8 +26,14 @@ export function isAuthorized(session, audience) {
 
 function specificity(pattern) {
   const star = pattern.indexOf("*");
-  if (star === -1) return 1000 + pattern.length;   // exact patterns rank above any glob
-  return pattern.slice(0, star).length;            // else longest literal prefix wins
+  if (star === -1) return 1_000_000 + pattern.length; // exact patterns always win
+  // Patterns starting with "*" anchor on a content component (e.g. "*/media_*") rather than
+  // a path prefix. Give them a large bonus so they win over path-prefix rules.
+  if (pattern.startsWith("*")) {
+    const totalLiteral = pattern.split("*").reduce((s, p) => s + p.length, 0);
+    return 1000 + totalLiteral;
+  }
+  return star; // path-prefix: length of literal before first "*"
 }
 
 function matchGlob(pattern, path) {

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { forwardToOrigin } from "../src/origin.js";
+import { forwardToOrigin, originErrorPage } from "../src/origin.js";
 import { reqFor } from "./helpers.js";
 
 let seen; // capture what the worker sent to origin
@@ -17,6 +17,33 @@ beforeEach(() => {
     // Origin replies with a publicly-cacheable header to test the carve-out.
     return new Response("body", { headers: { "cache-control": "public, max-age=3600", "age": "120" } });
   };
+});
+
+describe("originErrorPage", () => {
+  it("fetches /errors/{status} from origin and returns given status code", async () => {
+    const req = reqFor("/protected/medical/x");
+    const res = await originErrorPage(403, req, config);
+    expect(res.status).toBe(403);
+    expect(await res.text()).toBe("body");
+    expect(res.headers.get("cache-control")).toBe("private, no-store");
+    expect(res.headers.get("age")).toBeNull();
+    expect(new URL(seen.url).pathname).toBe("/errors/403");
+  });
+
+  it("strips gate cookie Set-Cookie headers from error page response", async () => {
+    globalThis.fetch = async (input, init) => {
+      const r = input instanceof Request ? input : new Request(input, init);
+      seen = { url: r.url, headers: r.headers };
+      return new Response("error body", {
+        headers: [["set-cookie", "__gate_session=x; Path=/"], ["set-cookie", "app=ok; Path=/"]],
+      });
+    };
+    const req = reqFor("/protected/medical/x");
+    const res = await originErrorPage(403, req, config);
+    const cookies = res.headers.getSetCookie ? res.headers.getSetCookie() : [res.headers.get("set-cookie")];
+    expect(cookies.join("\n")).not.toContain("__gate_session=");
+    expect(cookies.join("\n")).toContain("app=ok");
+  });
 });
 
 describe("forwardToOrigin — client header spoofing (C1)", () => {

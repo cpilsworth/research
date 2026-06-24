@@ -2,7 +2,7 @@ import { loadConfig } from "./config.js";
 import { OidcClient } from "./oidc.js";
 import { readSession } from "./session.js";
 import { classify, isAuthorized } from "./policy.js";
-import { forwardToOrigin } from "./origin.js";
+import { forwardToOrigin, originErrorPage } from "./origin.js";
 
 export default {
   /**
@@ -28,7 +28,11 @@ export default {
     if (!session) {
       return tier === "secured" ? unauthorizedJson() : oidc.startLogin(request, url);
     }
-    if (!isAuthorized(session, audience)) return forbidden();
+    if (!isAuthorized(session, audience)) {
+      return request.headers.get("sec-fetch-mode") === "navigate"
+        ? originErrorPage(403, request, config)
+        : forbiddenJson();
+    }
 
     return forwardToOrigin(request, session, tier, config);
   },
@@ -41,9 +45,11 @@ function unauthorizedJson() {
   });
 }
 
-function forbidden() {
+function forbiddenJson() {
   return new Response(JSON.stringify({ error: "forbidden" }), {
     status: 403,
     headers: { "content-type": "application/json; charset=utf-8", "cache-control": "private, no-store" },
   });
 }
+
+

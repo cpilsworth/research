@@ -9,6 +9,27 @@
  */
 const GATE_COOKIE_NAMES = new Set(["__gate_session", "__gate_login"]);
 
+/**
+ * Fetch an error page from the origin at `/errors/{status}` and return it
+ * with the given status code. Used for authenticated-but-unauthorised responses
+ * so the site can render a branded error page rather than bare JSON.
+ */
+export async function originErrorPage(status, request, config) {
+  const errorUrl = `https://${config.originHostname}/errors/${status}`;
+  const headers = new Headers();
+  headers.set("host", config.originHostname);
+  headers.set("x-forwarded-host", config.forwardedHost);
+  headers.set("x-auth-request-id", request.headers.get("cf-ray") || crypto.randomUUID());
+  const res = await fetch(new Request(errorUrl, {
+    method: "GET", headers, cf: { cacheTtl: 0, cacheEverything: false },
+  }));
+  const out = new Response(res.body, { status, headers: res.headers });
+  stripGateSetCookies(out.headers);
+  out.headers.set("cache-control", "private, no-store");
+  out.headers.delete("age");
+  return out;
+}
+
 export async function forwardToOrigin(request, session, tier, config) {
   const inUrl = new URL(request.url);
   const originUrl = `https://${config.originHostname}${inUrl.pathname}${inUrl.search}`;

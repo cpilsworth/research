@@ -5,7 +5,7 @@ const policy = {
   rules: [
     { path: "/", tier: "public" },
     { path: "/blog/*", tier: "public" },
-    { path: "/media_*", tier: "public" },
+    { path: "*/media_*", tier: "public" },
     { path: "/*.plain.html", tier: "public" },
     { path: "/members/*", tier: "protected", audience: ["site-readers"] },
     { path: "/members/admin/*", tier: "protected", audience: ["admins"] },
@@ -22,6 +22,14 @@ describe("classify", () => {
     expect(classify("/blog/2026/post", policy).tier).toBe("public");
     expect(classify("/media_abc123.png", policy).tier).toBe("public");
     expect(classify("/foo.plain.html", policy).tier).toBe("public");
+  });
+  it("*/media_* beats path-prefix rules at any depth", () => {
+    expect(classify("/members/media_abc.jpg", policy).tier).toBe("public");
+    expect(classify("/members/admin/media_abc.jpg", policy).tier).toBe("public");
+  });
+  it("path-prefix rules still govern non-media files under protected paths", () => {
+    expect(classify("/members/page.html", policy)).toEqual({ tier: "protected", audience: ["site-readers"] });
+    expect(classify("/members/admin/page.html", policy)).toEqual({ tier: "protected", audience: ["admins"] });
   });
   it("most-specific rule wins (longer literal prefix)", () => {
     expect(classify("/members/x", policy)).toEqual({ tier: "protected", audience: ["site-readers"] });
