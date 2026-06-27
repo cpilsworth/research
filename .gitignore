@@ -2,3 +2,5 @@
 output/
 .playwright-home/
 .playwright-cache/
+node_modules/
+.wrangler

@@ -1,0 +1,47 @@
+name = "preview-proxy-worker"
+main = "src/index.js"
+compatibility_date = "2025-01-01"
+
+# KV namespaces — create each with `wrangler kv:namespace create <NAME>`
+# then replace the placeholder IDs below with the output.
+[[kv_namespaces]]
+binding = "PREVIEW_KEYS"
+id = "56cd1c80f421473f97597bd0d9d5b416"
+
+[[kv_namespaces]]
+binding = "JTI_STORE"
+id = "1c2b7a9b81d1487c8676caf1d0f796d3"
+
+[[kv_namespaces]]
+binding = "AUTHOR_STORE"
+id = "cc8d72658ea54c8889b69d8e5641289c"
+
+# Service binding to the content worker. A Worker cannot fetch() another Worker
+# on the same workers.dev zone via its public hostname (Cloudflare error 1042) —
+# this binding routes the subrequest directly to the da-sc worker instead.
+[[services]]
+binding = "CONTENT"
+service = "da-sc"
+
+[[durable_objects.bindings]]
+name = "RATE_LIMITER"
+class_name = "RateLimiter"
+
+[[migrations]]
+tag = "v1"
+new_classes = ["RateLimiter"]
+
+[vars]
+# Public configuration — edit these for your deployment.
+CONTENT_DOMAIN = "preview-proxy-worker.cpilsworth.workers.dev"
+APP_BUNDLE_ID = "7F8YB87KXW.chrisp.ContentPreview"
+ANDROID_PACKAGE = "com.example.contentpreview"
+ANDROID_CERT_FINGERPRINT = ""
+# Comma-separated ISO 3166-1 alpha-2 codes, e.g. "GB,IE,US". Empty = no restriction.
+ALLOWED_COUNTRIES = ""
+PREVIEW_ORIGIN = "https://da-sc.cpilsworth.workers.dev/preview/cpilsworth/nedp"
+LIVE_ORIGIN = "https://da-sc.cpilsworth.workers.dev/live/cpilsworth/nedp"
+
+# Secrets — set via `wrangler secret put`:
+#   PREVIEW_PRIVATE_KEY   JWK from scripts/generate-key.mjs
+#   SIGNING_API_KEY       random string for API key auth

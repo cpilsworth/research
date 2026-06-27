@@ -23,6 +23,9 @@ final class AppViewModel: ObservableObject {
     /// The most recently tapped deep link, surfaced as a transient banner.
     @Published var lastDeepLink: String? = nil
 
+    // Injected in tests to verify tokens with a custom key pair.
+    var tokenVerify: (String) throws -> PreviewToken = JWTVerifier.verify(_:)
+
     enum LoadState: Equatable {
         case idle
         case loading
@@ -64,7 +67,7 @@ final class AppViewModel: ObservableObject {
     /// whose path matches the token's claim.
     func applyPreviewToken(_ token: String) {
         do {
-            let claims = try JWTVerifier.verify(token)
+            let claims = try tokenVerify(token)
             tokenError = nil
             previewPaths.insert(claims.path)
             if let screen = screens.first(where: { $0.path == claims.path }) {
